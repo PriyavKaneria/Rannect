@@ -3,7 +3,7 @@ import Config
 # Configure your database
 config :rannect, Rannect.Repo,
   username: "postgres",
-  password: "postgres",
+  password: "diginova",
   database: "rannect_dev",
   hostname: "localhost",
   show_sensitive_data_on_connection_error: true,
