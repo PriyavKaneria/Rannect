@@ -7,8 +7,25 @@ defmodule Rannect.Users.User do
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :confirmed_at, :naive_datetime
+    field :username, :string
+    field :gender, :string, default: "male"
+    field :age, :integer
+    field :location, :map, default: %{}
+    field :online, :boolean, default: false
 
     timestamps()
+  end
+
+
+
+  def key_to_atom(map) do
+    Enum.reduce(map, %{}, fn
+      {key, value}, acc when is_atom(key) -> Map.put(acc, key, value)
+      # String.to_existing_atom saves us from overloading the VM by
+      # creating too many atoms. It'll always succeed because all the fields
+      # in the database already exist as atoms at runtime.
+      {key, value}, acc when is_binary(key) -> Map.put(acc, String.to_existing_atom(key), value)
+    end)
   end
 
   @doc """
@@ -29,11 +46,19 @@ defmodule Rannect.Users.User do
       Defaults to `true`.
   """
   def registration_changeset(user, attrs, opts \\ []) do
+    attrs = attrs |> key_to_atom()
     user
-    |> cast(attrs, [:email, :password])
+    |> cast(attrs, [:email, :password, :gender, :age, :username])
+    |> validate_required([:username, :age])
     |> validate_confirmation(:password, message: "does not match password")
     |> validate_email()
+    |> validate_username()
     |> validate_password(opts)
+  end
+
+  defp validate_username(changeset) do
+    changeset
+    |> unique_constraint(:username)
   end
 
   defp validate_email(changeset) do
@@ -141,4 +166,25 @@ defmodule Rannect.Users.User do
   Returns true if the user has confirmed their account, false otherwise
   """
   def is_confirmed?(user), do: user.confirmed_at != nil
+
+  @doc """
+  Returns true if the user is online, false otherwise
+  """
+  def is_online?(user), do: user.online
+
+  @doc """
+  Sets the location of the user.
+  """
+  def location_chageset(user, location?) do
+    user
+    |> cast(%{location: location?}, [:location])
+  end
+
+  @doc """
+  Sets the status of the user.
+  """
+  def online_changeset(user, is_user_online?) do
+    user
+    |> cast(%{online: is_user_online?}, [:online])
+  end
 end

@@ -79,9 +79,41 @@ defmodule Rannect.Users do
       {:error, %Ecto.Changeset{}}
 
   """
+  def check_and_add_username(attrs) do
+    if !Map.has_key?(attrs, :username) == true do
+      if Map.has_key?(attrs, :email) == true do
+        newUsername =
+          "#{Enum.at(String.split(Map.fetch!(attrs, :email), "@"), 0)}##{System.unique_integer()}"
+
+        Map.merge(attrs, %{
+          :username => newUsername
+        })
+      else
+        Map.merge(attrs, %{
+          :username => "undefinedUser#{System.unique_integer()}"
+        })
+      end
+    else
+      attrs
+    end
+  end
+
+  def check_and_add_age(attrs) do
+    if !Map.has_key?(attrs, :age) do
+      Map.merge(attrs, %{
+        :age => 18
+      })
+    else
+      attrs
+    end
+  end
+
   def register_user(attrs) do
+    attrs_with_username = check_and_add_username(attrs)
+    attrs_with_age = check_and_add_age(attrs_with_username)
+
     %User{}
-    |> User.registration_changeset(attrs)
+    |> User.registration_changeset(attrs_with_age)
     |> Repo.insert()
   end
 

@@ -11,6 +11,18 @@
   <%= email_input f, :email, required: true %>
   <%= error_tag f, :email %>
 
+  <%= label f, :username %>
+  <%= text_input f, :username %>
+  <%= error_tag f, :username %>
+  
+  <%= label f, :age %>
+  <%= number_input f, :age, value: 18 %>
+  <%= error_tag f, :age %>
+  
+  <%= label f, :gender %>
+  <%= select f, :gender, [[key: "Male", value: "male"],[key: "Female", value: "female"],[key: "Other", value: "other"]], prompt: [key: "Choose your gender", disabled: true] %>
+  <%= error_tag f, :gender %>
+
   <%= label f, :password %>
   <%= password_input f, :password, required: true %>
   <%= error_tag f, :password %>

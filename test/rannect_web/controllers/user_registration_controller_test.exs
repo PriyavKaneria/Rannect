@@ -26,9 +26,9 @@ defmodule RannectWeb.UserRegistrationControllerTest do
       conn =
         post(conn, Routes.user_registration_path(conn, :create), %{
           "user" => %{
-            "email" => email,
-            "password" => valid_user_password(),
-            "password_confirmation" => valid_user_password()
+            :email => email,
+            :password => valid_user_password(),
+            :password_confirmation => valid_user_password()
           }
         })
 
@@ -51,9 +51,9 @@ defmodule RannectWeb.UserRegistrationControllerTest do
       conn =
         post(conn, Routes.user_registration_path(conn, :create), %{
           "user" => %{
-            "email" => "with spaces",
-            "password" => "too short",
-            "password_confirmation" => "does not match"
+            :email => "with spaces",
+            :password => "too short",
+            :password_confirmation => "does not match"
           }
         })
 
