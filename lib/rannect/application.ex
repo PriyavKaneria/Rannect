@@ -14,8 +14,10 @@ defmodule Rannect.Application do
       RannectWeb.Telemetry,
       # Start the PubSub system
       {Phoenix.PubSub, name: Rannect.PubSub},
+      # Start Presence process
+      Rannect.Presence,
       # Start the Endpoint (http/https)
-      RannectWeb.Endpoint
+      RannectWeb.Endpoint,
       # Start a worker by calling: Rannect.Worker.start_link(arg)
       # {Rannect.Worker, arg}
     ]

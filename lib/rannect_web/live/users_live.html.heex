@@ -1,0 +1,15 @@
+
+<section class="phx-hero">
+  <h1><%= gettext "Welcome to %{name}!", name: "Rannect" %></h1>
+  <p>Peace of mind from prototype to production</p>
+</section>
+
+<section class="row">
+  <article class="column">
+    <h3>Online Users</h3>
+    <div>
+        <h2>Users online:</h2>
+        <%= live_component RannectWeb.Components.OnlineUsers, current_user: @current_user, users: @users %>
+    </div>
+  </article>
+</section>
