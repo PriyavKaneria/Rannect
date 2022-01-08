@@ -14,6 +14,9 @@ defmodule RannectWeb.UsersLive do
       {:ok, _} =
         Presence.track(self(), @presence, user[:id], %{
           username: user[:username],
+          gender: user[:gender],
+          age: user[:age],
+          location: user[:location],
           joined_at: :os.system_time(:seconds)
         })
 
