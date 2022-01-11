@@ -387,4 +387,13 @@ defmodule Rannect.Users do
       {:error, :user, changeset, _} -> {:error, changeset}
     end
   end
+
+  @doc """
+  Updates location of user.
+  """
+  def update_location(user, attrs \\ %{}) do
+    user
+    |> User.location_changeset(attrs)
+    |> Repo.update()
+  end
 end

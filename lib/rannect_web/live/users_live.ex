@@ -10,6 +10,7 @@ defmodule RannectWeb.UsersLive do
   @impl true
   def mount(_params, %{"user_token" => token}, socket) do
     user = Map.from_struct(Users.get_user_by_session_token(token))
+
     if connected?(socket) do
       {:ok, _} =
         Presence.track(self(), @presence, user[:id], %{
@@ -43,6 +44,8 @@ defmodule RannectWeb.UsersLive do
   end
 
   defp handle_joins(socket, joins) do
+    # IO.inspect(socket)
+
     Enum.reduce(joins, socket, fn {user, %{metas: [meta | _]}}, socket ->
       assign(socket, :users, Map.put(socket.assigns.users, user, meta))
     end)

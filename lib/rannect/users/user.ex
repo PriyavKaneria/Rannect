@@ -175,9 +175,10 @@ defmodule Rannect.Users.User do
   @doc """
   Sets the location of the user.
   """
-  def location_chageset(user, location?) do
+  def location_changeset(user, location) do
+    # change(user, location: location)
     user
-    |> cast(%{location: location?}, [:location])
+    |> cast(%{location: location}, [:location])
   end
 
   @doc """
