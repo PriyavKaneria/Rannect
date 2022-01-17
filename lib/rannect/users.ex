@@ -6,7 +6,7 @@ defmodule Rannect.Users do
   import Ecto.Query, warn: false
   alias Rannect.Repo
 
-  alias Rannect.Users.{User, UserToken, UserNotifier}
+  alias Rannect.Users.{User, UserToken, UserNotifier, Invite}
 
   ## Database getters
 
@@ -395,5 +395,195 @@ defmodule Rannect.Users do
     user
     |> User.location_changeset(attrs)
     |> Repo.update()
+  end
+
+  @doc """
+  Get invite from id.
+
+  ## Examples
+
+      iex> get_invite_by_id(1)
+      %Invite{}
+
+      iex> get_invite_by_id(2)
+      nil
+  """
+  def get_invite!(id), do: Repo.get!(Invite, id)
+
+  @doc """
+  Gets all invites of user.
+
+  Returns list of Invite schema.
+
+  ## Examples
+
+      iex> get_user_sent_invites(user)
+      [%Invite{}, %Invite{}, ...]
+
+  """
+  def get_user_sent_invites(user) do
+    sent_invites = Repo.all(Ecto.assoc(user, :sent_invites))
+
+    sent_invites_users =
+      for invite <- sent_invites, !Invite.is_invitation_accepted?(invite) do
+        invite = Map.from_struct(invite)
+        Map.from_struct(get_user!(invite[:invitee]))
+      end
+
+    sent_invites_users
+  end
+
+  @doc """
+  Gets all invites of user.
+
+  Returns list of Invite schema.
+
+  ## Examples
+
+      iex> get_user_received_invites(user)
+      [%Invite{}, %Invite{}, ...]
+
+  """
+  def get_user_received_invites(user) do
+    received_invites = Repo.all(Ecto.assoc(user, :received_invites))
+
+    received_invites_users =
+      for invite <- received_invites, !Invite.is_invitation_accepted?(invite) do
+        invite = Map.from_struct(invite)
+        Map.from_struct(get_user!(invite[:inviter])) |> Map.put(:inviteid, invite[:id])
+      end
+
+    received_invites_users
+  end
+
+  defp check_invites(inviter_id, invitee_id) do
+    with %Invite{} = invite <- Repo.get_by(Invite, invitee: invitee_id, inviter: inviter_id),
+         invite do
+      {:error, :already_invited}
+    else
+      :error ->
+        IO.puts("deleting invites")
+        Repo.delete_all(Invite, inviter: inviter_id, invitee: invitee_id)
+        {:ok, :ok}
+
+      _ ->
+        {:ok, :ok}
+    end
+  end
+
+  defp check_invited(inviter_id, invitee_id) do
+    with %Invite{} = invite <- Repo.get_by(Invite, invitee: invitee_id, inviter: inviter_id),
+         invite do
+      {:error, :already_invited_user}
+    else
+      :error ->
+        IO.puts("deleting invites")
+        Repo.delete_all(Invite, inviter: inviter_id, invitee: invitee_id)
+        {:ok, :ok}
+
+      _ ->
+        {:ok, :ok}
+    end
+  end
+
+  @doc """
+  Invite user.
+
+  ## Examples
+
+      iex> invite_user(user)
+      [%User{}, %User{}, ...]
+
+  """
+  def invite_user(attrs) do
+    now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+    invitee = get_user!(attrs[:invitee])
+    inviter = get_user!(attrs[:inviter])
+    invitee = invitee |> Repo.preload(:received_invites)
+    inviter = inviter |> Repo.preload(:sent_invites) |> Repo.preload(:received_invites)
+
+    # CHECK IF ALREADY INVITED
+    case check_invites(inviter.id, invitee.id) do
+      {:ok, _} ->
+        case check_invited(invitee.id, inviter.id) do
+          {:ok, _} ->
+            case %Invite{
+                   accepted: false,
+                   invited_on: now
+                 }
+                 |> Invite.invite_changeset(attrs)
+                 |> Repo.insert() do
+              {:ok, invite} ->
+                invitee
+                |> Ecto.Changeset.change()
+                |> Ecto.Changeset.put_assoc(:received_invites, [invite | invitee.received_invites])
+                |> Repo.update!()
+
+                inviter
+                |> Ecto.Changeset.change()
+                |> Ecto.Changeset.put_assoc(:sent_invites, [invite | inviter.sent_invites])
+                |> Repo.update!()
+            end
+
+            {:ok, :ok}
+
+          {:error, :already_invited_user} ->
+            {:error, :already_invited_user}
+
+          {:error, :error} ->
+            {:error, :error}
+        end
+
+      {:error, :already_invited} ->
+        {:error, :already_invited}
+
+      {:error, :error} ->
+        {:error, :error}
+    end
+  end
+
+  @doc """
+  Accepts invite.
+
+  ## Examples
+
+      iex> accept_invite(inviteid, user)
+      {:ok, %User{}}
+
+  """
+  def accept_invite(inviteid, userid) do
+    invite = get_invite!(inviteid)
+
+    cond do
+      Invite.is_invitation_accepted?(invite) ->
+        {:error, :already_accepted}
+
+      !Invite.is_user_invited?(invite, userid) ->
+        {:error, :not_invited}
+
+      true ->
+        invite
+        |> Ecto.Changeset.change(accepted: true)
+        |> Repo.update()
+    end
+  end
+
+  @doc """
+  Rejects invite.
+
+  ## Examples
+
+      iex> reject_invite(inviteid, user)
+      {:ok, %User{}}
+
+  """
+  def reject_invite(inviteid, userid) do
+    invite = get_invite!(inviteid)
+
+    cond do
+      Invite.is_invitation_accepted?(invite) -> {:error, :already_accepted}
+      !Invite.is_user_invited?(invite, userid) -> {:error, :not_invited}
+      true -> invite |> Repo.delete()
+    end
   end
 end

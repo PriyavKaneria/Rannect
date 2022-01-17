@@ -2,6 +2,8 @@ defmodule Rannect.Users.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Rannect.Users.Invite
+
   schema "users" do
     field :email, :string
     field :password, :string, virtual: true, redact: true
@@ -13,10 +15,11 @@ defmodule Rannect.Users.User do
     field :location, :map, default: %{}
     field :online, :boolean, default: false
 
+    has_many :sent_invites, Invite, foreign_key: :inviter
+    has_many :received_invites, Invite, foreign_key: :invitee
+
     timestamps()
   end
-
-
 
   def key_to_atom(map) do
     Enum.reduce(map, %{}, fn
@@ -47,6 +50,7 @@ defmodule Rannect.Users.User do
   """
   def registration_changeset(user, attrs, opts \\ []) do
     attrs = attrs |> key_to_atom()
+
     user
     |> cast(attrs, [:email, :password, :gender, :age, :username])
     |> validate_required([:username, :age])

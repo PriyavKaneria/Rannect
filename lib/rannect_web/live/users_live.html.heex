@@ -1,8 +1,17 @@
 <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 flex flex-col space-y-3 p-3">
     <span class="hidden" id="location_data" phx-hook="SetLocation"></span>
     <h3 class="text-xl font-bold">Online Users</h3>
-    <div class="flex flex-col space-y-2">
-        <h2>Users online:</h2>
-        <%= live_component RannectWeb.Components.OnlineUsers, current_user: @current_user, users: @users %>
+    <div class="flex flex-col md:flex-row space-x-3 space-y-3">
+        <div class="flex flex-col space-y-2">
+            <h2>Users online:</h2>
+            <%= live_component RannectWeb.Components.OnlineUsers, current_user: @current_user, users: @users %>
+        </div>
+        <div class="flex flex-col space-y-2">
+            <h2>User Invites:</h2>
+            <%= live_component RannectWeb.Components.UserInvites, current_user: @current_user, users: @user_sent_invites %>
+            
+            <h2>User Invitations:</h2>
+            <%= live_component RannectWeb.Components.UserInvitations, current_user: @current_user, users: @user_received_invites %>
+        </div>
     </div>
 </div>
