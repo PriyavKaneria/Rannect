@@ -6,7 +6,6 @@ defmodule Rannect.Users.Invite do
 
   schema "invites" do
     field :accepted, :boolean, default: false
-    field :invited_on, :naive_datetime
     belongs_to :inviter_id, User, foreign_key: :inviter
     belongs_to :invitee_id, User, foreign_key: :invitee
 
@@ -16,12 +15,12 @@ defmodule Rannect.Users.Invite do
   @doc false
   def invite_changeset(invite, attrs) do
     invite
-    |> cast(attrs, [:inviter, :invitee, :accepted, :invited_on])
+    |> cast(attrs, [:inviter, :invitee, :accepted])
     |> foreign_key_constraint(:invitee)
     |> foreign_key_constraint(:inviter)
     |> assoc_constraint(:invitee_id)
     |> assoc_constraint(:inviter_id)
-    |> validate_required([:inviter, :invitee, :accepted, :invited_on])
+    |> validate_required([:inviter, :invitee, :accepted])
   end
 
   @doc """

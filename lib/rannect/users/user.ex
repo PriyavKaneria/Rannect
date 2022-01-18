@@ -3,6 +3,7 @@ defmodule Rannect.Users.User do
   import Ecto.Changeset
 
   alias Rannect.Users.Invite
+  alias Rannect.Rannections.Rannection
 
   schema "users" do
     field :email, :string
@@ -13,7 +14,7 @@ defmodule Rannect.Users.User do
     field :gender, :string, default: "male"
     field :age, :integer
     field :location, :map, default: %{}
-    field :online, :boolean, default: false
+    field :rannections, {:array, :integer}, default: []
 
     has_many :sent_invites, Invite, foreign_key: :inviter
     has_many :received_invites, Invite, foreign_key: :invitee
@@ -172,24 +173,11 @@ defmodule Rannect.Users.User do
   def is_confirmed?(user), do: user.confirmed_at != nil
 
   @doc """
-  Returns true if the user is online, false otherwise
-  """
-  def is_online?(user), do: user.online
-
-  @doc """
   Sets the location of the user.
   """
   def location_changeset(user, location) do
     # change(user, location: location)
     user
     |> cast(%{location: location}, [:location])
-  end
-
-  @doc """
-  Sets the status of the user.
-  """
-  def online_changeset(user, is_user_online?) do
-    user
-    |> cast(%{online: is_user_online?}, [:online])
   end
 end

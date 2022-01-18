@@ -7,6 +7,7 @@ defmodule Rannect.Users do
   alias Rannect.Repo
 
   alias Rannect.Users.{User, UserToken, UserNotifier, Invite}
+  alias Rannect.Rannections
 
   ## Database getters
 
@@ -496,7 +497,7 @@ defmodule Rannect.Users do
 
   """
   def invite_user(attrs) do
-    now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+    # now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
     invitee = get_user!(attrs[:invitee])
     inviter = get_user!(attrs[:inviter])
     invitee = invitee |> Repo.preload(:received_invites)
@@ -508,8 +509,7 @@ defmodule Rannect.Users do
         case check_invited(invitee.id, inviter.id) do
           {:ok, _} ->
             case %Invite{
-                   accepted: false,
-                   invited_on: now
+                   accepted: false
                  }
                  |> Invite.invite_changeset(attrs)
                  |> Repo.insert() do
@@ -565,6 +565,11 @@ defmodule Rannect.Users do
         invite
         |> Ecto.Changeset.change(accepted: true)
         |> Repo.update()
+
+        Rannections.create_rannection(%{
+          inviter: invite.inviter,
+          invitee: invite.invitee
+        })
     end
   end
 
@@ -585,5 +590,22 @@ defmodule Rannect.Users do
       !Invite.is_user_invited?(invite, userid) -> {:error, :not_invited}
       true -> invite |> Repo.delete()
     end
+  end
+
+  @doc """
+  Adds Rannection.
+
+  ## Examples
+
+      iex> add_rannection(user)
+      {:ok, %User{}}
+
+  """
+  def add_rannection(userid, rannectionid) do
+    user = get_user!(userid)
+    nrannections = [ rannectionid | user.rannections ]
+    user
+    |> Ecto.Changeset.change(rannections: nrannections)
+    |> Repo.update()
   end
 end

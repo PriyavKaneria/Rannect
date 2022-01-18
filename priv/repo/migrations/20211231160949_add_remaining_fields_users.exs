@@ -7,7 +7,7 @@ defmodule Rannect.Repo.Migrations.AddRemainingFieldsUsers do
       add_if_not_exists(:gender, :string, default: "male")
       add_if_not_exists(:age, :integer)
       add_if_not_exists(:location, :map, default: %{})
-      add_if_not_exists(:online, :boolean, default: false)
+      add_if_not_exists(:rannections, {:array, :integer}, default: [])
     end
   end
 end

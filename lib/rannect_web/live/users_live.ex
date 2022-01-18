@@ -1,10 +1,11 @@
 defmodule RannectWeb.UsersLive do
   use RannectWeb, :live_view
   alias Rannect.Users
+  alias Rannect.Rannections
 
   alias Rannect.Presence
   alias Rannect.PubSub
-  alias Rannect.Users.Invite
+  # alias Rannect.Users.Invite
 
   @online_user_presence "rannect:online-user-presence"
   defp invitation_presence(user_id), do: "rannect:invitation-presence#{user_id}"
@@ -16,6 +17,7 @@ defmodule RannectWeb.UsersLive do
 
     sent_invites_users = Users.get_user_sent_invites(user_struct)
     received_invites_users = Users.get_user_received_invites(user_struct)
+    rannections = Rannections.get_rannections_users(user[:rannections], user[:id])
 
     if connected?(socket) do
       {:ok, _} =
@@ -38,14 +40,14 @@ defmodule RannectWeb.UsersLive do
       |> assign(:users, %{})
       |> assign(:user_sent_invites, sent_invites_users)
       |> assign(:user_received_invites, received_invites_users)
+      |> assign(:rannections, rannections)
+      |> assign(:online_rannections, %{})
       |> handle_joins(Presence.list(@online_user_presence))
     }
   end
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff", payload: diff}, socket) do
-    IO.puts("Presence diff")
-
     {
       :noreply,
       socket
@@ -67,14 +69,22 @@ defmodule RannectWeb.UsersLive do
   end
 
   @impl true
-  def handle_info("invite_accepted", socket) do
+  def handle_info({"invite_accepted", inviteeid}, socket) do
     user_struct = Users.get_user!(socket.assigns.current_user[:id])
     sent_invites_users = Users.get_user_sent_invites(user_struct)
+    rannections = Rannections.get_rannections_users(user_struct.rannections, user_struct.id)
+    invitee = Users.get_user!(inviteeid)
 
     {
       :noreply,
       socket
       |> assign(:user_sent_invites, sent_invites_users)
+      |> assign(:rannections, rannections)
+      |> assign(:users, Map.delete(socket.assigns.users, inviteeid))
+      |> assign(
+        :online_rannections,
+        Map.put(socket.assigns.online_rannections, inviteeid, invitee)
+      )
     }
   end
 
@@ -91,16 +101,30 @@ defmodule RannectWeb.UsersLive do
   end
 
   defp handle_joins(socket, joins) do
-    # IO.inspect(socket)
-
     Enum.reduce(joins, socket, fn {user, %{metas: [meta | _]}}, socket ->
-      assign(socket, :users, Map.put(socket.assigns.users, user, meta))
+      cond do
+        String.to_integer(user) in socket.assigns.rannections ->
+          assign(
+            socket,
+            :online_rannections,
+            Map.put(socket.assigns.online_rannections, user, meta)
+          )
+
+        true ->
+          assign(socket, :users, Map.put(socket.assigns.users, user, meta))
+      end
     end)
   end
 
   defp handle_leaves(socket, leaves) do
     Enum.reduce(leaves, socket, fn {user, _}, socket ->
-      assign(socket, :users, Map.delete(socket.assigns.users, user))
+      cond do
+        String.to_integer(user) in socket.assigns.rannections ->
+          assign(socket, :online_rannections, Map.delete(socket.assigns.online_rannections, user))
+
+        true ->
+          assign(socket, :users, Map.delete(socket.assigns.users, user))
+      end
     end)
   end
 
@@ -131,10 +155,12 @@ defmodule RannectWeb.UsersLive do
         }
 
       {:error, :already_invited} ->
-        {:noreply, socket |> put_flash("error", "You have already sent an invitation to this user")}
+        {:noreply,
+         socket |> put_flash("error", "You have already sent an invitation to this user")}
 
       {:error, :already_invited_user} ->
-        {:noreply, socket |> put_flash("error", "You already have a pending invitation of this user")}
+        {:noreply,
+         socket |> put_flash("error", "You already have a pending invitation of this user")}
 
       {:error, :error} ->
         {:noreply, socket |> put_flash("error", "An error occurred")}
@@ -144,22 +170,31 @@ defmodule RannectWeb.UsersLive do
   @impl true
   def handle_event("accept_invite", params, socket) do
     user = socket.assigns.current_user
-    user_struct = Users.get_user!(user[:id])
 
     Users.accept_invite(params["inviteid"], user[:id])
+    user_struct = Users.get_user!(user[:id])
 
     Phoenix.PubSub.broadcast(
       PubSub,
       invitation_presence(params["inviter"]),
-      "invite_accepted"
+      {"invite_accepted", user[:id]}
     )
 
+    inviter = Users.get_user!(params["inviter"])
+
     received_invites_users = Users.get_user_received_invites(user_struct)
+    rannections = Rannections.get_rannections_users(user_struct.rannections, user[:id])
 
     {
       :noreply,
       socket
       |> assign(:user_received_invites, received_invites_users)
+      |> assign(:rannections, rannections)
+      |> assign(:users, Map.delete(socket.assigns.users, params["inviter"]))
+      |> assign(
+        :online_rannections,
+        Map.put(socket.assigns.online_rannections, params["inviter"], inviter)
+      )
     }
   end
 
