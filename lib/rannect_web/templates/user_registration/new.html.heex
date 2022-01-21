@@ -24,7 +24,7 @@
           <%= label f, :email, class: "block text-sm font-medium text-gray-700" %>
           <div class="mt-1">
             <%= email_input f, :email, required: true,class: "appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
-            <%= error_tag f, :email, class: "text-sm font-normal text-red-500" %>
+            <%= error_tag f, :email, "text-sm font-normal text-red-500" %>
           </div>
         </div>
 
@@ -32,7 +32,7 @@
           <%= label f, :username, class: "block text-sm font-medium text-gray-700" %>
           <div class="mt-1">
             <%= text_input f, :username, required: true,class: "appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
-            <%= error_tag f, :username, class: "text-sm font-normal text-red-500" %>
+            <%= error_tag f, :username, "text-sm font-normal text-red-500" %>
           </div>
         </div>
 
@@ -40,7 +40,7 @@
           <%= label f, :age, class: "block text-sm font-medium text-gray-700" %>
           <div class="mt-1">
             <%= number_input f, :age, required: true,class: "appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
-            <%= error_tag f, :age, class: "text-sm font-normal text-red-500" %>
+            <%= error_tag f, :age, "text-sm font-normal text-red-500" %>
           </div>
         </div>
 
@@ -48,7 +48,7 @@
           <%= label f, :gender, class: "block text-sm font-medium text-gray-700" %>
           <div class="mt-1">
             <%= select f, :gender, [[key: "Male", value: "male"],[key: "Female", value: "female"],[key: "Other", value: "other"]], prompt: [key: "Choose your gender", disabled: true], class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
-            <%= error_tag f, :gender, class: "text-sm font-normal text-red-500" %>
+            <%= error_tag f, :gender, "text-sm font-normal text-red-500" %>
           </div>
         </div>
 
@@ -56,7 +56,7 @@
           <%= label f, :password, class: "block text-sm font-medium text-gray-700" %>
           <div class="mt-1">
             <%= password_input f, :password, required: true, class: "appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
-            <%= error_tag f, :password, class: "text-sm font-normal text-red-500" %>
+            <%= error_tag f, :password, "text-sm font-normal text-red-500" %>
           </div>
         </div>
 
@@ -64,7 +64,7 @@
           <%= label f, :password_confirmation, "Confirm Password", class: "block text-sm font-medium text-gray-700" %>
           <div class="mt-1">
             <%= password_input f, :password_confirmation, required: true, class: "appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
-            <%= error_tag f, :password_confirmation, class: "text-sm font-normal text-red-500" %>
+            <%= error_tag f, :password_confirmation, "text-sm font-normal text-red-500" %>
           </div>
         </div>
 

@@ -3,11 +3,14 @@ defmodule Rannect.Rannections.Rannection do
   import Ecto.Changeset
 
   alias Rannect.Users.User
+  alias Rannect.Rannections.Chat
 
   schema "rannections" do
     field :blocked, :boolean, default: false
     belongs_to :inviter_id, User, foreign_key: :inviter
     belongs_to :invitee_id, User, foreign_key: :invitee
+
+    has_many :chats, Chat
 
     timestamps()
   end

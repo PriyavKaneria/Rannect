@@ -17,4 +17,19 @@ defmodule Rannect.RannectionsFixtures do
 
     rannection
   end
+
+  @doc """
+  Generate a chat.
+  """
+  def chat_fixture(attrs \\ %{}) do
+    {:ok, chat} =
+      attrs
+      |> Enum.into(%{
+        img_url: "some img_url",
+        message: "some message"
+      })
+      |> Rannect.Rannections.create_chat()
+
+    chat
+  end
 end
