@@ -25,6 +25,7 @@ import "phoenix_html"
 import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
 import topbar from "../vendor/topbar"
+// import { init } from "./world"
 
 let csrfToken = document
 	.querySelector("meta[name='csrf-token']")
@@ -33,37 +34,26 @@ let csrfToken = document
 let Hooks = {}
 Hooks.SetLocation = {
 	DEBOUNCE_MS: 200,
-	// user() {return this.el.dataset.user},
-	// Called when a LiveView is mounted, if it includes an element that uses this hook.
-	// push_data(data) {
-	// 	this.pushEventTo(
-	// 		".phx-hook-subscribe-to-location",
-	// 		"updated_location_data",
-	// 		data
-	// 	)
-	// },
 	mounted() {
-		// `this.el` is the form.
 		clearTimeout(this.timeout)
-		// const userId = this.user()
 		this.timeout = setTimeout(() => {
-			// Ajax request to update session.
 			navigator.geolocation.getCurrentPosition(function (position) {
-				// console.log(position.coords.latitude, position.coords.longitude)
 				console.log("set location")
 				fetch(
 					`/location?lat=${position.coords.latitude}&long=${position.coords.longitude}`,
 					{ method: "get" }
 				)
 			})
-
-			// Optionally, include this so other LiveViews can be notified of changes.
-			// this.pushEventTo(
-			// 	".phx-hook-subscribe-to-location",
-			// 	"updated_session_data",
-			// 	"whatever data you want to send"
-			// )
 		}, this.DEBOUNCE_MS)
+	},
+}
+
+Hooks.ScrollBottom = {
+	mounted() {
+		var scrollable = document.getElementById(
+			"chat-container-" + this.el.dataset.userid
+		)
+		scrollable.scrollTo(0, scrollable.scrollHeight - scrollable.clientHeight)
 	},
 }
 
@@ -71,6 +61,12 @@ let liveSocket = new LiveSocket("/live", Socket, {
 	params: { _csrf_token: csrfToken },
 	hooks: Hooks,
 })
+
+// Hooks.WorldInitialize = {
+// 	mounted() {
+// 		init()
+// 	},
+// }
 
 // Show progress bar on live navigation and form submits
 topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" })

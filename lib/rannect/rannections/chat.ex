@@ -16,7 +16,7 @@ defmodule Rannect.Rannections.Chat do
   @doc false
   def changeset(chat, attrs) do
     chat
-    |> cast(attrs, [:message, :img_url])
+    |> cast(attrs, [:message, :img_url, :sender])
     |> validate_required([:message])
   end
 end

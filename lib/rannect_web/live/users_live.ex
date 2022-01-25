@@ -2,13 +2,15 @@ defmodule RannectWeb.UsersLive do
   use RannectWeb, :live_view
   alias Rannect.Users
   alias Rannect.Rannections
+  alias Rannect.Rannections.Chat
 
-  alias Rannect.Presence
   alias Rannect.PubSub
+  alias Rannect.Presence
   # alias Rannect.Users.Invite
 
   @online_user_presence "rannect:online-user-presence"
   defp invitation_presence(user_id), do: "rannect:invitation-presence#{user_id}"
+  defp chat_presence(user_id), do: "rannect:chat-presence#{user_id}"
 
   @impl true
   def mount(_params, %{"user_token" => token}, socket) do
@@ -31,6 +33,7 @@ defmodule RannectWeb.UsersLive do
 
       Phoenix.PubSub.subscribe(PubSub, @online_user_presence)
       Phoenix.PubSub.subscribe(PubSub, invitation_presence(user[:id]))
+      Phoenix.PubSub.subscribe(PubSub, chat_presence(user[:id]))
     end
 
     {
@@ -42,6 +45,8 @@ defmodule RannectWeb.UsersLive do
       |> assign(:user_received_invites, received_invites_users)
       |> assign(:rannections, rannections)
       |> assign(:online_rannections, %{})
+      |> assign(:rannection_chats, %{})
+      |> assign(:chat_changeset, Chat.changeset(%Chat{}, %{}))
       |> handle_joins(Presence.list(@online_user_presence))
     }
   end
@@ -128,6 +133,62 @@ defmodule RannectWeb.UsersLive do
       :noreply,
       socket
       |> assign(:user_sent_invites, sent_invites_users)
+    }
+  end
+
+  @impl true
+  def handle_info({"chat_start", userid}, socket) do
+    newMap =
+      socket.assigns.online_rannections
+      |> Map.put(
+        Integer.to_string(userid),
+        Map.put(socket.assigns.online_rannections[Integer.to_string(userid)], :chatting, true)
+      )
+
+    rannection = Rannections.get_rannection_from_ids!(userid, socket.assigns.current_user[:id])
+
+    rannection = Rannections.preload_rannection_chats(rannection)
+
+    {
+      :noreply,
+      socket
+      |> assign(:online_rannections, newMap)
+      |> assign(
+        :rannection_chats,
+        socket.assigns.rannection_chats
+        |> Map.put(
+          userid,
+          rannection.chats
+        )
+      )
+    }
+  end
+
+  @impl true
+  def handle_info({"chat_message", userid}, socket) do
+    newMap =
+      socket.assigns.online_rannections
+      |> Map.put(
+        Integer.to_string(userid),
+        Map.put(socket.assigns.online_rannections[Integer.to_string(userid)], :chatting, true)
+      )
+
+    rannection = Rannections.get_rannection_from_ids!(userid, socket.assigns.current_user[:id])
+
+    rannection = Rannections.preload_rannection_chats(rannection)
+
+    {
+      :noreply,
+      socket
+      |> assign(:online_rannections, newMap)
+      |> assign(
+        :rannection_chats,
+        socket.assigns.rannection_chats
+        |> Map.put(
+          userid,
+          rannection.chats
+        )
+      )
     }
   end
 
@@ -226,17 +287,36 @@ defmodule RannectWeb.UsersLive do
 
   @impl true
   def handle_event("chat", params, socket) do
-    newMap =
-      socket.assigns.online_rannections
-      |> Map.put(
-        params["userid"],
-        Map.put(socket.assigns.online_rannections[params["userid"]], :chatting, true)
-      )
+    rannection =
+      Rannections.get_rannection_from_ids!(params["userid"], socket.assigns.current_user[:id])
+
+    rannection = Rannections.preload_rannection_chats(rannection)
+
+    Phoenix.PubSub.broadcast(
+      PubSub,
+      chat_presence(params["userid"]),
+      {"chat_start", socket.assigns.current_user[:id]}
+    )
 
     {
       :noreply,
       socket
-      |> assign(:online_rannections, newMap)
+      |> assign(
+        :online_rannections,
+        socket.assigns.online_rannections
+        |> Map.put(
+          params["userid"],
+          Map.put(socket.assigns.online_rannections[params["userid"]], :chatting, true)
+        )
+      )
+      |> assign(
+        :rannection_chats,
+        socket.assigns.rannection_chats
+        |> Map.put(
+          String.to_integer(params["userid"]),
+          rannection.chats
+        )
+      )
     }
   end
 
@@ -253,6 +333,54 @@ defmodule RannectWeb.UsersLive do
       :noreply,
       socket
       |> assign(:online_rannections, newMap)
+    }
+  end
+
+  @impl true
+  def handle_event("validate_message", params, socket) do
+    changeset =
+      %Chat{}
+      |> Chat.changeset(params["chat"])
+
+    {:noreply,
+     socket
+     |> assign(:chat_changeset, changeset)}
+  end
+
+  @impl true
+  def handle_event("send_message", params, socket) do
+    rannection =
+      Rannections.get_rannection_from_ids!(
+        params["chat"]["userid"],
+        socket.assigns.current_user[:id]
+      )
+
+    rannection
+    |> Rannections.create_chat(%{
+      message: params["chat"]["message"],
+      sender: socket.assigns.current_user[:id]
+    })
+
+    Phoenix.PubSub.broadcast(
+      PubSub,
+      chat_presence(params["chat"]["userid"]),
+      {"chat_message", socket.assigns.current_user[:id]}
+    )
+
+    rannection = Rannections.preload_rannection_chats(rannection)
+
+    {
+      :noreply,
+      socket
+      |> assign(
+        :rannection_chats,
+        socket.assigns.rannection_chats
+        |> Map.put(
+          String.to_integer(params["chat"]["userid"]),
+          rannection.chats
+        )
+      )
+      |> assign(:chat_changeset, Chat.changeset(%Chat{}, %{}))
     }
   end
 end
