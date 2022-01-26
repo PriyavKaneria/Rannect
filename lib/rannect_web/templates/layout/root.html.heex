@@ -10,7 +10,10 @@
     <script defer phx-track-static type="text/javascript" src={Routes.static_path(@conn, "/assets/app.js")}></script>
   </head>
   <body class="font-pt-sans h-full">
-    <header>
+    <div class="absolute overflow-hidden w-screen h-screen">
+      <div class="world-bg z-10"></div>
+    </div>
+    <header class="z-20">
       <%= render "_user_menu.html", assigns %>
     </header>
     <%= @inner_content %>

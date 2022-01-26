@@ -8,6 +8,7 @@ var config = {
 	isPoleVisible: true,
 	autoSpin: false,
 	zoom: 0,
+	maxZoom: 0.75,
 
 	skipPreloaderAnimation: false,
 
@@ -66,7 +67,7 @@ export function init(ref) {
 	globeContainer = document.querySelector(".world-globe-doms-container")
 	globePole = document.querySelector(".world-globe-pole")
 	globeHalo = document.querySelector(".world-globe-halo")
-	globeHalo.style.backgroundImage = "url(" + URLS.halo + ")"
+	// globeHalo.style.backgroundImage = "url(" + URLS.halo + ")"
 
 	regenerateGlobe()
 
@@ -134,8 +135,12 @@ function onMouseUp(evt) {
 }
 
 function onMouseScroll(evt) {
-	config.zoom += evt.deltaY * 0.001 * -1
-	config.zoom = clamp(config.zoom, 0, 1)
+	if (evt.deltaY > 0 && config.zoom == 0) return
+	if (evt.deltaY < 0 && config.zoom == 1) return
+	config.zoom += evt.deltaY * 0.0005 * -1
+	config.zoom = parseFloat(config.zoom).toFixed(2)
+	config.zoom = clamp(config.zoom, 0, config.maxZoom)
+	config.zoom = parseFloat(config.zoom)
 }
 
 function regenerateGlobe() {
@@ -236,9 +241,9 @@ function render() {
 	var ratio = Math.pow(config.zoom, 1.5)
 	pixelExpandOffset = 1.5 + ratio * -1.25
 	ratio = 1 + ratio * 3
-	globe.style[transformStyleName] = "scale3d(" + ratio + "," + ratio + ",1)"
+	globe.style[transformStyleName] = "scale(" + ratio + "," + ratio + ")"
 	ratio = 1 + Math.pow(config.zoom, 3) * 0.3
-	worldBg.style[transformStyleName] = "scale3d(" + ratio + "," + ratio + ",1)"
+	// worldBg.style[transformStyleName] = "scale3d(" + ratio + "," + ratio + ",1)"
 
 	transformGlobe()
 }

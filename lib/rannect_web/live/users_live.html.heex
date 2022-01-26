@@ -4,13 +4,14 @@
 <%# <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r11/Stats.js" type="text/javascript"></script> %>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js" type="text/javascript"></script>
 
-<div class="world-container">
-    <div class="world" phx-hook="WorldInitialize">
-        <div class="world-bg"></div>
-        <div class="world-globe">
-            <div class="world-globe-pole"></div>
-            <div class="world-globe-doms-container"></div>
-            <div class="world-globe-halo"></div>
+<div class="relative flex justify-center items-center z-30 overflow-visible h-screen w-0 mx-auto">
+    <div class="world-container z-30 overflow-visible">
+        <div class="world overflow-visible" phx-hook="WorldInitialize" id="world">
+            <div class="world-globe">
+                <div class="world-globe-pole"></div>
+                <div class="world-globe-doms-container"></div>
+                <img class="world-globe-halo" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/6043/css_globe_halo.png" />
+            </div>
         </div>
     </div>
 </div>

@@ -1,5 +1,5 @@
-<header class="absolute bg-indigo-600 w-full z-30">
-  <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Top">
+<header class="absolute bg-transparent w-full h-full z-20">
+  <nav class="mx-auto px-4 sm:px-6 lg:px-8">
     <div class="w-full py-6 flex items-center justify-between border-b border-indigo-500 lg:border-none">
       <div class="flex items-center">
         <a href="#">
@@ -12,14 +12,14 @@
           </a>
         </div>
       </div>
-      <div class="ml-10 space-x-4">
+      <div class="flex flex-col ml-10 space-y-4">
         <%= if @current_user do %>
-          <div class="inline-block bg-indigo-500 py-2 px-4 border border-transparent rounded-md text-base font-medium text-white hover:bg-opacity-75 cursor-pointer"><%= @current_user.username %></div>
-          <div class="inline-block bg-indigo-500 py-2 px-4 border border-transparent rounded-md text-base font-medium text-white hover:bg-opacity-75 cursor-pointer"><%= link "Settings", to: Routes.user_settings_path(@conn, :edit) %></div>
-          <div class="inline-block bg-indigo-500 py-2 px-4 border border-transparent rounded-md text-base font-medium text-white hover:bg-opacity-75 cursor-pointer"><%= link "Log out", to: Routes.user_session_path(@conn, :delete), method: :delete %></div>
+          <div class="inline-block bg-white bg-opacity-60 py-2 px-4 border border-transparent rounded-md text-base font-medium text-gray-700 hover:bg-opacity-75 cursor-pointer"><%= @current_user.username %></div>
+          <div class="inline-block bg-white bg-opacity-60 py-2 px-4 border border-transparent rounded-md text-base font-medium text-gray-700 hover:bg-opacity-75 cursor-pointer"><%= link "Settings", to: Routes.user_settings_path(@conn, :edit) %></div>
+          <div class="inline-block bg-white bg-opacity-60 py-2 px-4 border border-transparent rounded-md text-base font-medium text-gray-700 hover:bg-opacity-75 cursor-pointer"><%= link "Log out", to: Routes.user_session_path(@conn, :delete), method: :delete %></div>
         <% else %>
-          <div class="inline-block bg-indigo-500 py-2 px-4 border border-transparent rounded-md text-base font-medium text-white hover:bg-opacity-75 cursor-pointer"><%= link "Register", to: Routes.user_registration_path(@conn, :new) %></div>
-          <div class="inline-block bg-indigo-500 py-2 px-4 border border-transparent rounded-md text-base font-medium text-white hover:bg-opacity-75 cursor-pointer"><%= link "Log in", to: Routes.user_session_path(@conn, :new) %></div>
+          <div class="inline-block bg-white bg-opacity-60 py-2 px-4 border border-transparent rounded-md text-base font-medium text-gray-700 hover:bg-opacity-75 cursor-pointer"><%= link "Register", to: Routes.user_registration_path(@conn, :new) %></div>
+          <div class="inline-block bg-white bg-opacity-60 py-2 px-4 border border-transparent rounded-md text-base font-medium text-gray-700 hover:bg-opacity-75 cursor-pointer"><%= link "Log in", to: Routes.user_session_path(@conn, :new) %></div>
         <% end %>
       </div>
     </div>
