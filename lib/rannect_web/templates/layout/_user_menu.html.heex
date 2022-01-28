@@ -1,6 +1,6 @@
-<header class="absolute bg-transparent w-full h-full z-20">
+<header class="absolute bg-transparent w-full h-full z-20 font-cormorant small-caps">
   <nav class="mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="w-full py-6 flex items-center justify-between border-b border-indigo-500 lg:border-none">
+    <div class="w-full py-6 flex items-start justify-between border-none">
       <div class="flex items-center">
         <a href="#">
           <span class="sr-only">Rannect</span>
@@ -12,14 +12,14 @@
           </a>
         </div>
       </div>
-      <div class="flex flex-col ml-10 space-y-4">
+      <div class="flex flex-col ml-10 space-y-4 items-end">
         <%= if @current_user do %>
-          <div class="inline-block bg-white bg-opacity-60 py-2 px-4 border border-transparent rounded-md text-base font-medium text-gray-700 hover:bg-opacity-75 cursor-pointer"><%= @current_user.username %></div>
-          <div class="inline-block bg-white bg-opacity-60 py-2 px-4 border border-transparent rounded-md text-base font-medium text-gray-700 hover:bg-opacity-75 cursor-pointer"><%= link "Settings", to: Routes.user_settings_path(@conn, :edit) %></div>
-          <div class="inline-block bg-white bg-opacity-60 py-2 px-4 border border-transparent rounded-md text-base font-medium text-gray-700 hover:bg-opacity-75 cursor-pointer"><%= link "Log out", to: Routes.user_session_path(@conn, :delete), method: :delete %></div>
+          <div class="inline-block bg-gray-700 bg-opacity-75 py-2 px-8 text-center font-medium text-white hover:bg-opacity-90 cursor-pointer w-max"><%= @current_user.username %></div>
+          <div class="inline-block bg-gray-700 bg-opacity-75 py-2 px-6 text-center font-medium text-white hover:bg-opacity-90 cursor-pointer w-max"><%= link "Settings", to: Routes.user_settings_path(@conn, :edit) %></div>
+          <div class="inline-block bg-gray-700 bg-opacity-75 py-2 px-4 text-center font-medium text-white hover:bg-opacity-90 cursor-pointer w-max"><%= link "Log out", to: Routes.user_session_path(@conn, :delete), method: :delete %></div>
         <% else %>
-          <div class="inline-block bg-white bg-opacity-60 py-2 px-4 border border-transparent rounded-md text-base font-medium text-gray-700 hover:bg-opacity-75 cursor-pointer"><%= link "Register", to: Routes.user_registration_path(@conn, :new) %></div>
-          <div class="inline-block bg-white bg-opacity-60 py-2 px-4 border border-transparent rounded-md text-base font-medium text-gray-700 hover:bg-opacity-75 cursor-pointer"><%= link "Log in", to: Routes.user_session_path(@conn, :new) %></div>
+          <div class="inline-block bg-gray-700 bg-opacity-75 py-2 px-6 text-center font-medium text-white hover:bg-opacity-90 cursor-pointer w-max"><%= link "Register", to: Routes.user_registration_path(@conn, :new) %></div>
+          <div class="inline-block bg-gray-700 bg-opacity-75 py-2 px-4 text-center font-medium text-white hover:bg-opacity-90 cursor-pointer w-max"><%= link "Log in", to: Routes.user_session_path(@conn, :new) %></div>
         <% end %>
       </div>
     </div>

@@ -27,6 +27,13 @@ import { LiveSocket } from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 import { init } from "./world"
 
+// import Alpine
+import Alpine from "alpinejs"
+
+// // Add this before your liveSocket call.
+// window.Alpine = Alpine
+// Alpine.start()
+
 let csrfToken = document
 	.querySelector("meta[name='csrf-token']")
 	.getAttribute("content")
@@ -59,6 +66,13 @@ Hooks.ScrollBottom = {
 
 let liveSocket = new LiveSocket("/live", Socket, {
 	params: { _csrf_token: csrfToken },
+	dom: {
+		onBeforeElUpdated(from, to) {
+			if (from.__x) {
+				Alpine.clone(from.__x, to)
+			}
+		},
+	},
 	hooks: Hooks,
 })
 

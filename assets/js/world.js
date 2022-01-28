@@ -8,7 +8,7 @@ var config = {
 	isPoleVisible: true,
 	autoSpin: false,
 	zoom: 0,
-	maxZoom: 0.75,
+	maxZoom: 1,
 
 	skipPreloaderAnimation: false,
 
@@ -23,6 +23,7 @@ var preloader
 var preloadPercent
 var globeDoms
 var vertices
+var markerSegments = {}
 
 var world
 var worldBg
@@ -30,6 +31,7 @@ var globe
 var globeContainer
 var globePole
 var globeHalo
+var markers
 
 var pixelExpandOffset = 1.5
 var rX = 0
@@ -72,13 +74,13 @@ export function init(ref) {
 	regenerateGlobe()
 
 	var gui = new dat.GUI()
-	// gui.add(config, "lat", -90, 90).listen()
-	// gui.add(config, "lng", -180, 180).listen()
+	gui.add(config, "lat", -90, 90).listen()
+	gui.add(config, "lng", -180, 180).listen()
 	// gui.add(config, "isHaloVisible")
 	// gui.add(config, "isPoleVisible")
 	gui.add(config, "autoSpin")
 	gui.add(config, "goToHongKong")
-	// gui.add(config, "zoom", 0, 1).listen()
+	gui.add(config, "zoom", 0, 1).listen()
 
 	// stats = new Stats()
 	// stats.domElement.style.position = "absolute"
@@ -98,7 +100,58 @@ export function init(ref) {
 	globe.addEventListener("touchend", touchPass(onMouseUp))
 	globe.addEventListener("wheel", onMouseScroll)
 
+	calcMarkers()
+	loadMarkers()
 	loop()
+}
+
+function updateMarkerSegments(marker, lat, lng) {
+	var rtheta = ((90 - lat) * Math.PI) / 180
+	var rphi = ((lng + 180) * Math.PI) / 180
+	var i = 1
+	while (i < vertices.length && rtheta >= vertices[i][0].theta) i++
+	var j = 1
+	while (j < vertices[i].length && rphi >= vertices[i][j].phi) j++
+	var dtheta = rtheta - vertices[i - 1][0].theta
+	var dphi = rphi - vertices[i - 1][j - 1].phi
+	markerSegments[[i - 1, j - 1]] = {
+		marker: marker,
+		dtheta: dtheta,
+		dphi: dphi,
+	}
+}
+
+export function calcMarkers() {
+	markers = document.getElementsByClassName("world-marker")
+	for (var i = 0; i < markers.length; i++) {
+		var marker = markers[i]
+		updateMarkerSegments(
+			marker,
+			parseFloat(marker.attributes.lat.nodeValue),
+			parseFloat(marker.attributes.lng.nodeValue)
+		)
+		// markerSegments[[0, 0]] = marker
+	}
+	console.log(markerSegments)
+}
+
+export function loadMarkers() {
+	var segY = config.segY
+	var segX = config.segX
+	var segHeight = Math.PI / 13.333333333333334
+	var segWidth = Math.PI / 7
+	for (y = 0; y <= segY; y++) {
+		for (x = 0; x <= segX; x++) {
+			if (markerSegments[[y, x]]) {
+				var marker = markerSegments[[y, x]].marker
+				globeDoms[x + segX * y].appendChild(marker)
+				marker.style.position = "absolute"
+				marker.style.left = (markerSegments[[y, x]].dphi / segWidth) * 100 + "%"
+				marker.style.top =
+					(markerSegments[[y, x]].dtheta / segHeight) * 100 + "%"
+			}
+		}
+	}
 }
 
 function touchPass(func) {
@@ -193,6 +246,8 @@ function regenerateGlobe() {
 		vertices.push(verticesRow)
 	}
 
+	console.log(vertices)
+
 	for (y = 0; y < segY; ++y) {
 		for (x = 0; x < segX; ++x) {
 			dom = document.createElement("div")
@@ -200,7 +255,7 @@ function regenerateGlobe() {
 			domStyle.position = "absolute"
 			domStyle.width = segWidth + "px"
 			domStyle.height = segHeight + "px"
-			domStyle.overflow = "hidden"
+			domStyle.overflow = "visible"
 			domStyle[PerspectiveTransform.transformOriginStyleName] = "0 0"
 			domStyle.backgroundImage = diffuseImgBackgroundStyle
 			dom.perspectiveTransform = new PerspectiveTransform(
@@ -243,7 +298,7 @@ function render() {
 	ratio = 1 + ratio * 3
 	globe.style[transformStyleName] = "scale(" + ratio + "," + ratio + ")"
 	ratio = 1 + Math.pow(config.zoom, 3) * 0.3
-	// worldBg.style[transformStyleName] = "scale3d(" + ratio + "," + ratio + ",1)"
+	worldBg.style[transformStyleName] = "scale3d(" + ratio + "," + ratio + ",1)"
 
 	transformGlobe()
 }
