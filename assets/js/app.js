@@ -31,8 +31,8 @@ import { init } from "./world"
 import Alpine from "alpinejs"
 
 // // Add this before your liveSocket call.
-// window.Alpine = Alpine
-// Alpine.start()
+window.Alpine = Alpine
+Alpine.start()
 
 let csrfToken = document
 	.querySelector("meta[name='csrf-token']")
@@ -68,8 +68,8 @@ let liveSocket = new LiveSocket("/live", Socket, {
 	params: { _csrf_token: csrfToken },
 	dom: {
 		onBeforeElUpdated(from, to) {
-			if (from.__x) {
-				Alpine.clone(from.__x, to)
+			if (from._x_dataStack) {
+				window.Alpine.clone(from, to)
 			}
 		},
 	},

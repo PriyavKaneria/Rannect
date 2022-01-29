@@ -31,7 +31,7 @@ var globe
 var globeContainer
 var globePole
 var globeHalo
-var markers
+var markers = []
 
 var pixelExpandOffset = 1.5
 var rX = 0
@@ -102,6 +102,7 @@ export function init(ref) {
 
 	calcMarkers()
 	loadMarkers()
+	updateMarkerPositions()
 	loop()
 }
 
@@ -135,7 +136,7 @@ export function calcMarkers() {
 	console.log(markerSegments)
 }
 
-export function loadMarkers() {
+function loadMarkers() {
 	var segY = config.segY
 	var segX = config.segX
 	var segHeight = Math.PI / 13.333333333333334
@@ -151,6 +152,19 @@ export function loadMarkers() {
 					(markerSegments[[y, x]].dtheta / segHeight) * 100 + "%"
 			}
 		}
+	}
+}
+
+function updateMarkerPositions() {
+	markers = document.getElementsByClassName("world-marker")
+	for (const marker of markers) {
+		// console.log(marker.attributes.userid.nodeValue)
+		var mrkr = document.getElementById(
+			"marker-" + marker.attributes.userid.nodeValue
+		)
+		mrkrRect = marker.getBoundingClientRect()
+		mrkr.style.left = mrkrRect.left + "px"
+		mrkr.style.top = mrkrRect.top + "px"
 	}
 }
 
@@ -301,6 +315,7 @@ function render() {
 	worldBg.style[transformStyleName] = "scale3d(" + ratio + "," + ratio + ",1)"
 
 	transformGlobe()
+	updateMarkerPositions()
 }
 
 function clamp(x, min, max) {

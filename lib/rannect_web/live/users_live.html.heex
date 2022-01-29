@@ -11,13 +11,50 @@
                 <div class="world-globe-pole"></div>
                 <div class="world-globe-doms-container"></div>
                 <img class="world-globe-halo" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/6043/css_globe_halo.png" />
-                <div class="world-marker" lat="21.19594" lng="72.83023">
-                    <div class="location-pin">
-                        <img src="https://static.robinpowered.com/roadshow/robin-avatar.png">
-                        <div class='pin'></div>
-                        <div class='pulse'></div>
+                <div class="world-marker" lat="21.19594" lng="72.83023" userid={1}></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="markers-container">
+    <div class="marker" id={"marker-" <> "1"} x-data="{ open: false }"
+        @keydown.escape.window="open = false">
+        <div class="location-pin" aria-label="User Merker" aria-haspopup="true" @click="open = !open">
+            <img src="https://static.robinpowered.com/roadshow/robin-avatar.png">
+            <div class='pin'></div>
+            <div class='pulse'></div>
+        </div>
+        <div class="origin-bottom-center absolute bottom-0 mb-2 w-48 rounded-md shadow-lg -translate-x-1/2 -translate-y-4"
+            x-cloak
+            x-show="open"
+            @click.away="open = false"
+            x-transition:enter="transition ease-out duration-100"
+            x-transition:enter-start="transform opacity-0 scale-95"
+            x-transition:enter-end="transform opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-75"
+            x-transition:leave-start="transform opacity-100 scale-100"
+            x-transition:leave-end="transform opacity-0 scale-95">
+            <div class="rounded-md bg-white shadow-xs" role="menu" aria-orientation="vertical" aria-labelledby="user-menu">
+                <li class="flex flex-col text-center bg-white rounded-lg shadow divide-y divide-gray-200 hover:shadow-xl duration-600">
+                    <div class="flex-1 flex flex-col p-5">
+                    <img class="w-16 h-16 flex-shrink-0 mx-auto rounded-full" src="https://picsum.photos/300" alt="">
+                    <h3 class="mt-6 text-gray-900 text-sm font-medium capitalize">DigiNova</h3>
+                    <dl class="mt-1 flex-grow flex flex-col justify-between">
+                        <dt class="sr-only">Age</dt>
+                        <dd class="text-gray-500 text-sm">18</dd>
+                        <dd class="text-gray-500 text-sm flex space-x-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                            </svg>
+                            Surat, Gujarat - India
+                        </dd>
+                        <dt class="sr-only">Gender</dt>
+                        <dd class="mt-3">
+                            <span class="px-2 py-1 text-indigo-800 text-xs font-medium bg-indigo-100 rounded-full capitalize">Male</span>
+                        </dd>
+                    </dl>
                     </div>
-                </div>
+                </li>
             </div>
         </div>
     </div>

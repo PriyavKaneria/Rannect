@@ -1,5 +1,10 @@
 /* This file is for your main application CSS */
 @tailwind base;
+
+[x-cloak] {
+	display: none;
+}
+
 @tailwind components;
 @tailwind utilities;
 @import "./phoenix.css";
@@ -118,6 +123,10 @@
 	cursor: grab;
 	user-select: none;
 }
+.marker {
+	position: absolute;
+	z-index: 60;
+}
 
 .dg {
 	z-index: 9999 !important;
@@ -127,6 +136,9 @@
 	display: inline-block;
 	position: absolute;
 	transform: translate(-6px, -14px);
+	transform-origin: bottom center;
+	transition: all 0.1s ease-in-out;
+	cursor: pointer;
 }
 .location-pin img {
 	width: 10px;
@@ -152,6 +164,9 @@
 	-ms-animation-duration: 1s;
 	animation-duration: 1s;
 	background: #32383e;
+}
+.location-pin:hover {
+	transform: translate(-11px, -26px) scale(1.8);
 }
 .pin {
 	width: 12px;

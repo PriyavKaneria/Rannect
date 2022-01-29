@@ -225,9 +225,6 @@ defmodule RannectWeb.UsersLive do
       {:error, :already_invited_user} ->
         {:noreply,
          socket |> put_flash("error", "You already have a pending invitation of this user")}
-
-      {:error, :error} ->
-        {:noreply, socket |> put_flash("error", "An error occurred")}
     end
   end
 
