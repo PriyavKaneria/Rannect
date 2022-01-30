@@ -136,7 +136,8 @@ export function calcMarkers() {
 	console.log(markerSegments)
 }
 
-function loadMarkers() {
+export function loadMarkers() {
+	console.log("loadMarkers")
 	var segY = config.segY
 	var segX = config.segX
 	var segHeight = Math.PI / 13.333333333333334
@@ -156,7 +157,9 @@ function loadMarkers() {
 }
 
 function updateMarkerPositions() {
+	// console.log("updateMarkerPositions")
 	markers = document.getElementsByClassName("world-marker")
+	// console.log(markers)
 	for (const marker of markers) {
 		// console.log(marker.attributes.userid.nodeValue)
 		var mrkr = document.getElementById(
@@ -211,6 +214,7 @@ function onMouseScroll(evt) {
 }
 
 function regenerateGlobe() {
+	console.log("regenerating globe")
 	var dom, domStyle
 	var x, y
 	globeDoms = []
@@ -390,6 +394,14 @@ function transformGlobe() {
 			}
 		}
 	}
+}
+
+export function goToUser(userid) {
+	var userMarker = document.querySelector(`[userid="${userid}"]`)
+	var lat = parseFloat(userMarker.attributes.lat.nodeValue)
+	var lng = parseFloat(userMarker.attributes.lng.nodeValue)
+	console.log(userid, lat, lng)
+	goTo(lat, lng)
 }
 
 function goTo(lat, lng) {

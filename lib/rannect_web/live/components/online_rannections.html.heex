@@ -1,0 +1,17 @@
+
+<div class="flex rounded-lg shadow hover:shadow-xl flex-col bottom-12 left-12 z-30 absolute font-pt-sans">
+    <div class="bg-slate-800 flex flex-row justify-start px-3 py-2 rounded-t-lg">
+        <span class="text-md text-white">Online Rannections</span>
+    </div>
+    <div class="bg-white bg-opacity-90 px-3 py-1 flex flex-col space-y-2">
+        <%= if Enum.count(@users)!=0 do %>
+            <%= for {userid,user} <- @users do %>
+                <button class="text-normal text-black capitalize cursor-pointer" phx-hook="MarkerGoto" id={"marker-goto-" <> userid} @click={"markerGoto.goto("<> userid <>")"}>
+                    <%= user.username %> - <%= user.location["country"] %>
+                </button>
+            <% end %>
+        <% else %>
+            <span class="text-normal text-black">No one online</span>
+        <% end %>
+    </div>
+</div>

@@ -1,4 +1,4 @@
-defmodule RannectWeb.Components.OnlineUsers do
+defmodule RannectWeb.Components.OnlineRannections do
   use RannectWeb, :live_component
 
   def update(assigns, socket) do

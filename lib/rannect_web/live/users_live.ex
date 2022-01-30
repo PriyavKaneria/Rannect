@@ -53,6 +53,12 @@ defmodule RannectWeb.UsersLive do
 
   defp handle_joins(socket, joins) do
     Enum.reduce(joins, socket, fn {user, %{metas: [meta | _]}}, socket ->
+      # Phoenix.PubSub.broadcast_from(
+      #   PubSub,
+      #   @online_user_presence,
+      #   "update_marker"
+      # )
+
       cond do
         String.to_integer(user) in socket.assigns.rannections ->
           meta_map = meta |> Map.put(:chatting, false)
@@ -80,6 +86,11 @@ defmodule RannectWeb.UsersLive do
       end
     end)
   end
+
+  # @impl true
+  # def handle_info("update_marker", socket) do
+  #   {:noreply, socket}
+  # end
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff", payload: diff}, socket) do

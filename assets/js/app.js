@@ -25,7 +25,7 @@ import "phoenix_html"
 import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
 import topbar from "../vendor/topbar"
-import { init } from "./world"
+import { calcMarkers, goToUser, init, loadMarkers } from "./world"
 
 // import Alpine
 import Alpine from "alpinejs"
@@ -64,6 +64,28 @@ Hooks.ScrollBottom = {
 	},
 }
 
+Hooks.UpdateMarkers = {
+	updated() {
+		calcMarkers()
+		loadMarkers()
+	},
+}
+
+Hooks.WorldInitialize = {
+	mounted() {
+		init()
+	},
+}
+
+Hooks.MarkerGoto = {
+	mounted() {
+		window.markerGoto = this
+	},
+	goto(userid) {
+		goToUser(userid)
+	},
+}
+
 let liveSocket = new LiveSocket("/live", Socket, {
 	params: { _csrf_token: csrfToken },
 	dom: {
@@ -75,12 +97,6 @@ let liveSocket = new LiveSocket("/live", Socket, {
 	},
 	hooks: Hooks,
 })
-
-Hooks.WorldInitialize = {
-	mounted() {
-		init()
-	},
-}
 
 // Show progress bar on live navigation and form submits
 topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" })
