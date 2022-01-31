@@ -47,7 +47,7 @@
         <div>
           <%= label f, :gender, class: "block text-sm font-medium text-gray-700" %>
           <div class="mt-1">
-            <%= select f, :gender, [[key: "Male", value: "male"],[key: "Female", value: "female"],[key: "Other", value: "other"]], prompt: [key: "Choose your gender", disabled: true], class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
+            <%= select f, :gender, [[key: "Male", value: "male"],[key: "Female", value: "female"],[key: "Other", value: "other"],[key: "Secret", value: "secret"]], prompt: [key: "Choose your gender", disabled: true], class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
             <%= error_tag f, :gender, "text-sm font-normal text-red-500" %>
           </div>
         </div>

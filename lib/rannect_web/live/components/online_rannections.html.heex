@@ -3,7 +3,7 @@
     <div class="bg-slate-800 flex flex-row justify-start px-3 py-2 rounded-t-lg">
         <span class="text-md text-white">Online Rannections</span>
     </div>
-    <div class="bg-white bg-opacity-90 px-3 py-1 flex flex-col space-y-2">
+    <div class="bg-white bg-opacity-90 px-3 py-2 flex flex-col space-y-2 rounded-b-lg">
         <%= if Enum.count(@users)!=0 do %>
             <%= for {userid,user} <- @users do %>
                 <button class="text-normal text-black capitalize cursor-pointer" phx-hook="MarkerGoto" id={"marker-goto-" <> userid} @click={"markerGoto.goto("<> userid <>")"}>

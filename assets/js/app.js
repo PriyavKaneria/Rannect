@@ -58,7 +58,7 @@ Hooks.SetLocation = {
 Hooks.ScrollBottom = {
 	mounted() {
 		var scrollable = document.getElementById(
-			"chat-container-" + this.el.dataset.userid
+			"chat-container-" + this.el.getAttributeNode("phx-value-userid").value
 		)
 		scrollable.scrollTo(0, scrollable.scrollHeight - scrollable.clientHeight)
 	},
@@ -92,6 +92,7 @@ let liveSocket = new LiveSocket("/live", Socket, {
 		onBeforeElUpdated(from, to) {
 			if (from._x_dataStack) {
 				window.Alpine.clone(from, to)
+				window.Alpine.initTree(to)
 			}
 		},
 	},
