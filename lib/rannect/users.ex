@@ -428,7 +428,7 @@ defmodule Rannect.Users do
     sent_invites_users =
       for invite <- sent_invites, !Invite.is_invitation_accepted?(invite) do
         invite = Map.from_struct(invite)
-        Map.from_struct(get_user!(invite[:invitee]))
+        invite[:invitee]
       end
 
     sent_invites_users
@@ -449,9 +449,9 @@ defmodule Rannect.Users do
     received_invites = Repo.all(Ecto.assoc(user, :received_invites))
 
     received_invites_users =
-      for invite <- received_invites, !Invite.is_invitation_accepted?(invite) do
+      for invite <- received_invites, !Invite.is_invitation_accepted?(invite), into: %{} do
         invite = Map.from_struct(invite)
-        Map.from_struct(get_user!(invite[:inviter])) |> Map.put(:inviteid, invite[:id])
+        {invite[:inviter], invite[:id]}
       end
 
     received_invites_users

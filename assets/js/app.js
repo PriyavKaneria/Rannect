@@ -60,7 +60,9 @@ Hooks.ScrollBottom = {
 		var scrollable = document.getElementById(
 			"chat-container-" + this.el.getAttributeNode("phx-value-userid").value
 		)
-		scrollable.scrollTo(0, scrollable.scrollHeight - scrollable.clientHeight)
+		setTimeout(() => {
+			scrollable.scrollTo(0, scrollable.scrollHeight - scrollable.clientHeight)
+		}, 100)
 	},
 }
 

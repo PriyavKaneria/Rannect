@@ -23,6 +23,6 @@
 </div>
 <div class="markers-container" phx-hook="UpdateMarkers" id="marker-container">
     <%= live_component RannectWeb.Components.UserPopup, current_user: @current_user, users: @users, type: "users", sent: @user_sent_invites, received: @user_received_invites %>
-    <%= live_component RannectWeb.Components.UserPopup, current_user: @current_user, users: @online_rannections, type: "rannections", rannection_chats: @rannection_chats, changeset: @chat_changeset %>
+    <%= live_component RannectWeb.Components.UserPopup, current_user: @current_user, users: @online_rannections, type: "rannections", sent: [], received: %{}, rannection_chats: @rannection_chats, changeset: @chat_changeset %>
 </div>
 <%= live_component RannectWeb.Components.OnlineRannections, current_user: @current_user, users: @online_rannections %>
