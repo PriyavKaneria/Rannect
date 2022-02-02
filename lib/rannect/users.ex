@@ -390,6 +390,26 @@ defmodule Rannect.Users do
   end
 
   @doc """
+  Change user profile
+  """
+  def change_user_profile(user, attrs \\ %{}) do
+    User.profile_changeset(user, attrs)
+  end
+
+  @doc """
+  Update user Profile
+  """
+  def update_user_profile(user, attrs \\ %{}) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.update(:user, User.profile_changeset(user, attrs))
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{user: user}} -> {:ok, user}
+      {:error, :user, changeset, _} -> {:error, changeset}
+    end
+  end
+
+  @doc """
   Updates location of user.
   """
   def update_location(user, attrs \\ %{}) do

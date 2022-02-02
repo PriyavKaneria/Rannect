@@ -128,8 +128,8 @@
                                     </dd>
                                 </dl>
                             </div>
-                            <div class="w-full">
-                                <%= if String.to_integer(user_id) != @current_user[:id] do %>
+                            <%= if String.to_integer(user_id) != @current_user[:id] do %>
+                                <div class="w-full">
                                     <%= if @type == "users" do %>
                                         <div x-show="invited" class="flex-1 flex px-1 text-indigo-200-contrast hover:text-indigo-300-contrast bg-indigo-200 hover:bg-indigo-300 rounded-md">
                                             <div class="relative px-1 flex-1 inline-flex items-center justify-center py-2 text-sm font-medium border border-transparent rounded-br-md">
@@ -166,8 +166,8 @@
                                             </div>
                                         </div>
                                     <% end %>
-                                <% end %>
-                            </div>
+                                </div>
+                            <% end %>
                         </div>
                     </li>
                 </div>

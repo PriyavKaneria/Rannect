@@ -133,6 +133,16 @@ defmodule Rannect.Users.User do
   end
 
   @doc """
+  A user changeset for changing the profile
+  """
+  def profile_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:username, :age, :gender])
+    |> validate_required([:username, :age, :gender])
+    |> validate_username()
+  end
+
+  @doc """
   Confirms the account by setting `confirmed_at`.
   """
   def confirm_changeset(user) do

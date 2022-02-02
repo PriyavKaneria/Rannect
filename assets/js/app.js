@@ -25,7 +25,7 @@ import "phoenix_html"
 import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
 import topbar from "../vendor/topbar"
-import { calcMarkers, goToUser, init, loadMarkers } from "./world"
+import { calcMarkers, goToUser, init, loadMarkers, setAutoSpin } from "./world"
 
 // import Alpine
 import Alpine from "alpinejs"
@@ -76,6 +76,15 @@ Hooks.UpdateMarkers = {
 Hooks.WorldInitialize = {
 	mounted() {
 		init()
+	},
+}
+
+Hooks.AutoSpin = {
+	mounted() {
+		window.autoSpin = this
+	},
+	toggle(checked) {
+		setAutoSpin(checked)
 	},
 }
 

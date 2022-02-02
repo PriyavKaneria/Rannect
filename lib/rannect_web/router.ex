@@ -19,8 +19,6 @@ defmodule RannectWeb.Router do
 
   scope "/", RannectWeb do
     pipe_through :browser
-
-
   end
 
   scope "/", RannectWeb do
@@ -81,9 +79,9 @@ defmodule RannectWeb.Router do
   scope "/", RannectWeb do
     pipe_through [:browser, :require_authenticated_user]
 
-    get "/", PageController, :index
+    # get "/", PageController, :index
     get "/location", UserLocationController, :updateLocation
-    live "/users", UsersLive, :index
+    live "/", UsersLive, :index
     get "/users/settings", UserSettingsController, :edit
     put "/users/settings", UserSettingsController, :update
     get "/users/settings/confirm_email/:token", UserSettingsController, :confirm_email

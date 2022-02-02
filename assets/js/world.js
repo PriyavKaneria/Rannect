@@ -73,14 +73,14 @@ export function init(ref) {
 
 	regenerateGlobe()
 
-	var gui = new dat.GUI()
-	gui.add(config, "lat", -90, 90).listen()
-	gui.add(config, "lng", -180, 180).listen()
+	// var gui = new dat.GUI()
+	// gui.add(config, "lat", -90, 90).listen()
+	// gui.add(config, "lng", -180, 180).listen()
 	// gui.add(config, "isHaloVisible")
 	// gui.add(config, "isPoleVisible")
-	gui.add(config, "autoSpin")
-	gui.add(config, "goToHongKong")
-	gui.add(config, "zoom", 0, 1).listen()
+	// gui.add(config, "autoSpin")
+	// gui.add(config, "goToHongKong")
+	// gui.add(config, "zoom", 0, 1).listen()
 
 	// stats = new Stats()
 	// stats.domElement.style.position = "absolute"
@@ -133,11 +133,11 @@ export function calcMarkers() {
 		)
 		// markerSegments[[0, 0]] = marker
 	}
-	console.log(markerSegments)
+	// console.log(markerSegments)
 }
 
 export function loadMarkers() {
-	console.log("loadMarkers")
+	// console.log("loadMarkers")
 	var segY = config.segY
 	var segX = config.segX
 	var segHeight = Math.PI / 13.333333333333334
@@ -154,6 +154,10 @@ export function loadMarkers() {
 			}
 		}
 	}
+}
+
+export function setAutoSpin(checked) {
+	config.autoSpin = checked
 }
 
 function updateMarkerPositions() {

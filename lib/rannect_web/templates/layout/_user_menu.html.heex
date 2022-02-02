@@ -1,25 +1,22 @@
-<header class="absolute bg-transparent w-full h-full z-20 font-cormorant small-caps">
+<header class="absolute bg-transparent w-full z-20 font-cormorant small-caps">
   <nav class="mx-auto px-4 sm:px-6 lg:px-8">
     <div class="w-full py-6 flex items-start justify-between border-none">
       <div class="flex items-center">
-        <a href="#">
+        <a href="/">
           <span class="sr-only">Rannect</span>
           <img class="h-10 w-auto" src="https://tailwindui.com/img/logos/workflow-mark.svg?color=white" alt="">
         </a>
-        <div class="hidden ml-10 space-x-8 lg:block">
-          <a href="/users" class="text-base font-medium text-white hover:text-indigo-50" key="Users">
-            Users
-          </a>
-        </div>
       </div>
       <div class="flex flex-col ml-10 space-y-4 items-end">
         <%= if @current_user do %>
-          <div class="inline-block bg-gray-700 bg-opacity-75 py-2 px-8 text-center font-medium text-white hover:bg-opacity-90 cursor-pointer w-max"><%= @current_user.username %></div>
-          <div class="inline-block bg-gray-700 bg-opacity-75 py-2 px-6 text-center font-medium text-white hover:bg-opacity-90 cursor-pointer w-max"><%= link "Settings", to: Routes.user_settings_path(@conn, :edit) %></div>
-          <div class="inline-block bg-gray-700 bg-opacity-75 py-2 px-4 text-center font-medium text-white hover:bg-opacity-90 cursor-pointer w-max"><%= link "Log out", to: Routes.user_session_path(@conn, :delete), method: :delete %></div>
+          <div class="inline-block bg-gray-700 bg-opacity-75 py-2 px-8 text-center font-medium text-white hover:bg-opacity-90 cursor-pointer w-max">
+            <%= @current_user.username %>
+          </div>
+          <%= link "Settings", to: Routes.user_settings_path(@conn, :edit), class: "inline-block bg-gray-700 bg-opacity-75 py-2 px-6 text-center font-medium text-white hover:bg-opacity-90 cursor-pointer w-max" %>
+          <%= link "Log out", to: Routes.user_session_path(@conn, :delete), class: "inline-block bg-gray-700 bg-opacity-75 py-2 px-4 text-center font-medium text-white hover:bg-opacity-90 cursor-pointer w-max", method: :delete %>
         <% else %>
-          <div class="inline-block bg-gray-700 bg-opacity-75 py-2 px-6 text-center font-medium text-white hover:bg-opacity-90 cursor-pointer w-max"><%= link "Register", to: Routes.user_registration_path(@conn, :new) %></div>
-          <div class="inline-block bg-gray-700 bg-opacity-75 py-2 px-4 text-center font-medium text-white hover:bg-opacity-90 cursor-pointer w-max"><%= link "Log in", to: Routes.user_session_path(@conn, :new) %></div>
+          <%= link "Register", to: Routes.user_registration_path(@conn, :new), class: "inline-block bg-gray-700 bg-opacity-75 py-2 px-6 text-center font-medium text-white hover:bg-opacity-90 cursor-pointer w-max" %>
+          <%= link "Log in", to: Routes.user_session_path(@conn, :new), class: "inline-block bg-gray-700 bg-opacity-75 py-2 px-6 text-center font-medium text-white hover:bg-opacity-90 cursor-pointer w-max" %>
         <% end %>
       </div>
     </div>
