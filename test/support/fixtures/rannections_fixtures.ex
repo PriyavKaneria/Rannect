@@ -4,19 +4,19 @@ defmodule Rannect.RannectionsFixtures do
   entities via the `Rannect.Rannections` context.
   """
 
-  @doc """
-  Generate a rannection.
-  """
-  def rannection_fixture(attrs \\ %{}) do
-    {:ok, rannection} =
-      attrs
-      |> Enum.into(%{
-        blocked: true
-      })
-      |> Rannect.Rannections.create_rannection()
+  # @doc """
+  # Generate a rannection.
+  # """
+  # def rannection_fixture(attrs \\ %{}) do
+  #   {:ok, rannection} =
+  #     attrs
+  #     |> Enum.into(%{
+  #       blocked: true,
+  #     })
+  #     |> Rannect.Rannections.create_rannection()
 
-    rannection
-  end
+  #   rannection
+  # end
 
   @doc """
   Generate a chat.

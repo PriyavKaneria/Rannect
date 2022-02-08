@@ -7,9 +7,9 @@ defmodule RannectWeb.UserRegistrationControllerTest do
     test "renders registration page", %{conn: conn} do
       conn = get(conn, Routes.user_registration_path(conn, :new))
       response = html_response(conn, 200)
-      assert response =~ "<h1>Register</h1>"
-      assert response =~ "Log in</a>"
-      assert response =~ "Register</a>"
+      assert response =~ "Sign up your new account"
+      assert response =~ "Already have an account? Sign In"
+      assert response =~ "Register"
     end
 
     test "redirects if already logged in", %{conn: conn} do
@@ -58,7 +58,7 @@ defmodule RannectWeb.UserRegistrationControllerTest do
         })
 
       response = html_response(conn, 200)
-      assert response =~ "<h1>Register</h1>"
+      assert response =~ "Sign up your new account"
       assert response =~ "must have the @ sign and no spaces"
       assert response =~ "should be at least 12 character"
       assert response =~ "does not match password"
