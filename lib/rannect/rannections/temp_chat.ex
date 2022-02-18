@@ -1,14 +1,15 @@
-defmodule Rannect.Rannections.Chat do
+defmodule Rannect.Rannections.TempChat do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Rannect.Users.Invite
+  alias Rannect.Users.TempInvite
 
-  schema "chats" do
+  schema "temp_chats" do
     field :message, :string
     field :img_url, :string
     field :sender, :id
-    belongs_to :invites, Invite
+    field :temp_sender, :id
+    belongs_to :temp_invites, TempInvite
 
     timestamps()
   end

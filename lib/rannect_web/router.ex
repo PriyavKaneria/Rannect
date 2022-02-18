@@ -24,7 +24,7 @@ defmodule RannectWeb.Router do
   scope "/", RannectWeb do
     pipe_through [:browser, :require_authenticated_user]
 
-    get "/secure", PageController, :secure
+    get "/securetest", PageController, :secure
   end
 
   # Other scopes may use custom stacks.
@@ -66,6 +66,7 @@ defmodule RannectWeb.Router do
   scope "/", RannectWeb do
     pipe_through [:browser, :redirect_if_user_is_authenticated]
 
+    live "/", TempUsersLive, :index
     get "/users/register", UserRegistrationController, :new
     post "/users/register", UserRegistrationController, :create
     get "/users/log_in", UserSessionController, :new
@@ -81,7 +82,7 @@ defmodule RannectWeb.Router do
 
     # get "/", PageController, :index
     get "/location", UserLocationController, :updateLocation
-    live "/", UsersLive, :index
+    live "/secure", UsersLive, :index
     get "/users/settings", UserSettingsController, :edit
     put "/users/settings", UserSettingsController, :update
     get "/users/settings/confirm_email/:token", UserSettingsController, :confirm_email

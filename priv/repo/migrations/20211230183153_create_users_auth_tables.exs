@@ -7,11 +7,17 @@ defmodule Rannect.Repo.Migrations.CreateUsersAuthTables do
     create table(:users) do
       add :email, :citext, null: false
       add :hashed_password, :string, null: false
+      add :username, :string, required: true
       add :confirmed_at, :naive_datetime
+      add :gender, :string, default: "male"
+      add :age, :integer
+      add :location, :map, default: %{}
+      add :rannections, {:array, :integer}, default: []
       timestamps()
     end
 
     create unique_index(:users, [:email])
+    create unique_index(:users, [:username])
 
     create table(:users_tokens) do
       add :user_id, references(:users, on_delete: :delete_all), null: false

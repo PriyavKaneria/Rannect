@@ -1,16 +1,16 @@
-defmodule Rannect.Users.Invite do
+defmodule Rannect.Users.TempInvite do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Rannect.Users.User
-  alias Rannect.Rannections.Chat
+  alias Rannect.Users.TempUser
+  alias Rannect.Rannections.TempChat
 
-  schema "invites" do
+  schema "temp_invites" do
     field :accepted, :boolean, default: false
-    belongs_to :inviter_id, User, foreign_key: :inviter
-    belongs_to :invitee_id, User, foreign_key: :invitee
+    belongs_to :inviter_id, TempUser, foreign_key: :inviter
+    belongs_to :invitee_id, TempUser, foreign_key: :invitee
 
-    has_many :chats, Chat
+    has_many :temp_chats, TempChat
 
     timestamps()
   end
