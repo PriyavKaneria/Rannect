@@ -1,47 +1,33 @@
 defmodule RannectWeb.TempUsersLive do
   use RannectWeb, :live_view
-  # alias Rannect.TempUsers
+  alias Rannect.Users.TempUser
+  alias Rannect.Users
   # alias Rannect.Rannections.TempChat
 
-  # alias Rannect.PubSub
-  # alias Rannect.Presence
+  alias Rannect.PubSub
+  alias Rannect.Presence
   # alias Rannect.Users.Invite
 
-  # @online_user_presence "rannect:online-user-presence"
+  @online_user_presence "rannect:online-user-presence"
   # defp invitation_presence(user_id), do: "rannect:invitation-presence#{user_id}"
   # defp chat_presence(user_id), do: "rannect:chat-presence#{user_id}"
 
   @impl true
   def mount(_params, _session, socket) do
-    peer_data = get_connect_info(socket, :peer_data)
-    IO.inspect(peer_data)
-    # user_struct = Users.get_user_by_session_token(token)
-    # user = Map.from_struct(user_struct)
+    ip =
+      get_connect_info(socket, :x_headers) |> RemoteIp.from() |> Tuple.to_list() |> Enum.join(".")
 
-    # sent_invites_users = Users.get_user_sent_invites(user_struct)
-    # received_invites_users = Users.get_user_received_invites(user_struct)
-    # rannections = Rannections.get_rannections_users(user[:rannections], user[:id])
-
-    # if connected?(socket) do
-    #   {:ok, _} =
-    #     Presence.track(self(), @online_user_presence, user[:id], %{
-    #       username: user[:username],
-    #       gender: user[:gender],
-    #       age: user[:age],
-    #       location: user[:location],
-    #       joined_at: :os.system_time(:seconds)
-    #     })
-
-    #   Phoenix.PubSub.subscribe(PubSub, @online_user_presence)
-    #   Phoenix.PubSub.subscribe(PubSub, invitation_presence(user[:id]))
-    #   Phoenix.PubSub.subscribe(PubSub, chat_presence(user[:id]))
-    # end
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(PubSub, @online_user_presence)
+    end
 
     {
       :ok,
       socket
-      # |> assign(:current_user, user)
-      # |> assign(:users, %{})
+      |> assign(:user_ip, ip)
+      |> assign(:current_user, %{:username => "", :id => ""})
+      |> assign(:users, %{})
+      |> assign(:user_changeset, TempUser.changeset(%TempUser{}, %{}))
       # |> assign(:user_sent_invites, sent_invites_users)
       # |> assign(:user_received_invites, received_invites_users)
       # |> assign(:rannections, rannections)
@@ -52,56 +38,75 @@ defmodule RannectWeb.TempUsersLive do
     }
   end
 
-  # defp handle_joins(socket, joins) do
-  #   Enum.reduce(joins, socket, fn {user, %{metas: [meta | _]}}, socket ->
-  #     # Phoenix.PubSub.broadcast_from(
-  #     #   PubSub,
-  #     #   @online_user_presence,
-  #     #   "update_marker"
-  #     # )
+  defp handle_joins(socket, joins) do
+    Enum.reduce(joins, socket, fn {user, %{metas: [meta | _]}}, socket ->
+      assign(socket, :users, Map.put(socket.assigns.users, user, meta))
+    end)
+  end
 
-  #     cond do
-  #       String.to_integer(user) in socket.assigns.rannections ->
-  #         meta_map = meta |> Map.put(:chatting, false)
+  defp handle_leaves(socket, leaves) do
+    Enum.reduce(leaves, socket, fn {user, _}, socket ->
+      Users.delete_user_data(user)
+      assign(socket, :users, Map.delete(socket.assigns.users, user))
+    end)
+  end
 
-  #         assign(
-  #           socket,
-  #           :online_rannections,
-  #           Map.put(socket.assigns.online_rannections, user, meta_map)
-  #         )
+  @impl true
+  def handle_info("update_marker", socket) do
+    {:noreply, socket}
+  end
 
-  #       true ->
-  #         assign(socket, :users, Map.put(socket.assigns.users, user, meta))
-  #     end
-  #   end)
-  # end
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff", payload: diff}, socket) do
+    {
+      :noreply,
+      socket
+      |> handle_leaves(diff.leaves)
+      |> handle_joins(diff.joins)
+    }
+  end
 
-  # defp handle_leaves(socket, leaves) do
-  #   Enum.reduce(leaves, socket, fn {user, _}, socket ->
-  #     cond do
-  #       String.to_integer(user) in socket.assigns.rannections ->
-  #         assign(socket, :online_rannections, Map.delete(socket.assigns.online_rannections, user))
+  @impl true
+  def handle_event("validate_username", params, socket) do
+    changeset =
+      %TempUser{}
+      |> TempUser.changeset(params["temp_user"])
 
-  #       true ->
-  #         assign(socket, :users, Map.delete(socket.assigns.users, user))
-  #     end
-  #   end)
-  # end
+    IO.inspect(changeset)
 
-  # @impl true
-  # def handle_info("update_marker", socket) do
-  #   {:noreply, socket}
-  # end
+    {:noreply,
+     socket
+     |> assign(:user_changeset, changeset)}
+  end
 
-  # @impl true
-  # def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff", payload: diff}, socket) do
-  #   {
-  #     :noreply,
-  #     socket
-  #     |> handle_leaves(diff.leaves)
-  #     |> handle_joins(diff.joins)
-  #   }
-  # end
+  @impl true
+  def handle_event("set_username", params, socket) do
+    # Make user using params["temp_user"]
+    case Users.register_temporary_user(params["temp_user"]) do
+      {:ok, user} ->
+        if connected?(socket) do
+          {:ok, _} =
+            Presence.track(self(), @online_user_presence, user.id, %{
+              username: user.username,
+              location: user.location,
+              joined_at: :os.system_time(:seconds)
+            })
+        end
+
+        {
+          :noreply,
+          socket
+          |> assign(:current_user, user)
+        }
+
+      {:error, changeset} ->
+        {
+          :noreply,
+          socket
+          |> assign(:user_changeset, changeset)
+        }
+    end
+  end
 
   # @impl true
   # def handle_info("invite_received", socket) do

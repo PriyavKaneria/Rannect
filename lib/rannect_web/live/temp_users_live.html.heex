@@ -1,1 +1,42 @@
-Hello I am live!
+<script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.16.1/TweenMax.min.js" type="text/javascript"></script>
+<script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/6043/css_globe_PerspectiveTransform.js" type="text/javascript"></script>
+<%# <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r11/Stats.js" type="text/javascript"></script> %>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js" type="text/javascript"></script>
+<%# <span class="hidden" id="location_data" phx-hook="SetLocation"></span> %>
+
+<%= if @current_user.username == "" do %>
+    <%= live_component RannectWeb.Components.UserForm, user_changeset: @user_changeset, user_ip: @user_ip %>
+<% end %>
+<div class="relative flex justify-center items-center z-30 overflow-visible h-screen w-0 mx-auto">
+    <div class="world-container z-30 overflow-visible">
+        <div class="world overflow-visible" phx-hook="WorldInitialize" id="world">
+            <div class="world-globe">
+                <div class="world-globe-pole">
+                    <div class="autospin w-6 h-6 absolute bottom-12 right-0 z-30 inline-block overflow-visible" x-data="{hover : false, checked : true}">
+                        <div id="auto-spin" class="w-6 h-6 absolute bg-black bg-opacity-50 rounded-full hover:bg-opacity-90 border border-black duration-100 z-20" @mouseenter="hover=true" @mouseleave="hover=false" @click="checked = !checked;autoSpin.toggle(checked)" phx-hook="AutoSpinStart">
+                            <svg x-show="checked" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 -mt-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <span x-cloak x-show="hover || checked" class="absolute left-full whitespace-nowrap w-max text-sm font-pt-sans px-2 top-0 duration-100 transition ease-in-out z-10"
+                            x-transition:enter-start="opacity-0 -translate-x-1/2"
+                            x-transition:enter-end="opacity-100 translate-x-0"
+                            x-transition:leave-start="opacity-100 translate-x-0"
+                            x-transition:leave-end="opacity-0 -translate-x-1/2">
+                            Auto Spin
+                        </span>
+                    </div>
+                </div>
+                <div class="world-globe-doms-container" phx-update="ignore"></div>
+                <img class="world-globe-halo" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/6043/css_globe_halo.png" />
+                <%= for {user_id, user} <- @users do %>
+                    <div class="world-marker" lat={user.location["lat"]} lng={user.location["long"]} userid={user_id}></div>
+                <% end %>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="markers-container" phx-hook="UpdateMarkers" id="marker-container">
+    <%= live_component RannectWeb.Components.UserPopup, current_user: @current_user, users: @users, type: "users" %>
+</div>

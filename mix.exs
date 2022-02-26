@@ -53,7 +53,8 @@ defmodule Rannect.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:geonames, "~> 1.0.4"},
       {:poison, "> 3.0.0"},
-      {:hackney, "~> 1.18.0"}
+      {:hackney, "~> 1.18.0"},
+      {:remote_ip, "~> 1.0.0"}
     ]
   end
 

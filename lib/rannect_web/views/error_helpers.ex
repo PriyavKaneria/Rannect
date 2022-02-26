@@ -11,7 +11,7 @@ defmodule RannectWeb.ErrorHelpers do
   def error_tag(form, field, class \\ "") do
     Enum.map(Keyword.get_values(form.errors, field), fn error ->
       content_tag(:span, translate_error(error),
-        class: "invalid-feedback " <> class,
+        class: class <> "invalid-feedback",
         phx_feedback_for: input_name(form, field)
       )
     end)

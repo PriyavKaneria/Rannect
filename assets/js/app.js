@@ -88,6 +88,16 @@ Hooks.AutoSpin = {
 	},
 }
 
+Hooks.AutoSpinStart = {
+	mounted() {
+		window.autoSpin = this
+		setAutoSpin(true)
+	},
+	toggle(checked) {
+		setAutoSpin(checked)
+	},
+}
+
 Hooks.MarkerGoto = {
 	mounted() {
 		window.markerGoto = this

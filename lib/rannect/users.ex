@@ -6,7 +6,7 @@ defmodule Rannect.Users do
   import Ecto.Query, warn: false
   alias Rannect.Repo
 
-  alias Rannect.Users.{User, UserToken, UserNotifier, Invite}
+  alias Rannect.Users.{User, UserToken, UserNotifier, Invite, TempUser}
   alias Rannect.Rannections
 
   ## Database getters
@@ -115,6 +115,12 @@ defmodule Rannect.Users do
 
     %User{}
     |> User.registration_changeset(attrs_with_age)
+    |> Repo.insert()
+  end
+
+  def register_temporary_user(attrs) do
+    %TempUser{}
+    |> TempUser.changeset(attrs)
     |> Repo.insert()
   end
 
@@ -277,6 +283,14 @@ defmodule Rannect.Users do
   """
   def delete_session_token(token) do
     Repo.delete_all(UserToken.token_and_context_query(token, "session"))
+    :ok
+  end
+
+  @doc """
+  Delete all data of temporary users.
+  """
+  def delete_temporary_users(user) do
+    Repo.delete_all(from TempUser, where: [temp_user_id: ^user.id])
     :ok
   end
 
