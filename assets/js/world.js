@@ -115,6 +115,7 @@ function updateMarkerSegments(marker, lat, lng) {
 	while (j < vertices[i].length && rphi >= vertices[i][j].phi) j++
 	var dtheta = rtheta - vertices[i - 1][0].theta
 	var dphi = rphi - vertices[i - 1][j - 1].phi
+	// console.log(lat, lng, i, j, dtheta, dphi)
 	markerSegments[[i - 1, j - 1]] = {
 		marker: marker,
 		dtheta: dtheta,
@@ -126,11 +127,14 @@ export function calcMarkers() {
 	markers = document.getElementsByClassName("world-marker")
 	for (var i = 0; i < markers.length; i++) {
 		var marker = markers[i]
-		updateMarkerSegments(
-			marker,
-			parseFloat(marker.attributes.lat.nodeValue),
-			parseFloat(marker.attributes.lng.nodeValue)
-		)
+		var plat = 0
+		var plng = 0
+		// if (marker.attributes.lat)
+		plat = parseFloat(marker.attributes.lat?.nodeValue)
+		// if (marker.attributes.lng)
+		plng = parseFloat(marker.attributes.lng?.nodeValue)
+		// console.log(plat, plng)
+		updateMarkerSegments(marker, plat, plng)
 		// markerSegments[[0, 0]] = marker
 	}
 	// console.log(markerSegments)
@@ -401,9 +405,16 @@ function transformGlobe() {
 }
 
 export function goToUser(userid) {
-	var userMarker = document.querySelector(`[userid="${userid}"]`)
-	var lat = parseFloat(userMarker.attributes.lat.nodeValue)
-	var lng = parseFloat(userMarker.attributes.lng.nodeValue)
+	var userMarker = document.querySelectorAll(`[userid="${userid}"]`)
+	let dataMarker = userMarker[0]
+	userMarker.forEach((m) => {
+		if (m.attributes.lat) {
+			dataMarker = m
+		}
+	})
+	console.log(dataMarker, userMarker)
+	var lat = parseFloat(dataMarker.attributes.lat?.nodeValue)
+	var lng = parseFloat(dataMarker.attributes.lng?.nodeValue)
 	console.log(userid, lat, lng)
 	goTo(lat, lng)
 }

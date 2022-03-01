@@ -304,8 +304,8 @@ defmodule Rannect.Users do
   @doc """
   Delete all data of temporary users.
   """
-  def delete_temporary_users(user) do
-    Repo.delete_all(from TempUser, where: [id: ^user])
+  def delete_temporary_users(user_id) do
+    Repo.delete_all(from TempUser, where: [id: ^user_id])
     :ok
   end
 

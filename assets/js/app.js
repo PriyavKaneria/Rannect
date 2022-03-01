@@ -71,12 +71,12 @@ Hooks.SetTempLocation = {
 			this.pushMyEvent = this.pushEvent
 			this.cuser = this.user()
 			// console.log(this.cuser)
-			navigator.geolocation.getCurrentPosition((position) => {
+			navigator.geolocation.getCurrentPosition(async (position) => {
 				this.pushEvent = this.pushMyEvent
 				this.myuser = this.cuser
 				// console.log(this.myuser)
-				console.log("set location")
-				fetch(
+				// console.log("set location")
+				await fetch(
 					`/location?lat=${position.coords.latitude}&long=${position.coords.longitude}&temp=true&user=${this.myuser}`,
 					{ method: "get" }
 				)
@@ -84,9 +84,10 @@ Hooks.SetTempLocation = {
 						return res.json()
 					})
 					.then((res) => {
-						console.log(res)
+						// console.log(res)
 						this.pushEvent("update_user_location", { location: res })
 					})
+				setTimeout(() => goToUser(this.myuser), 1000)
 			})
 		}, this.DEBOUNCE_MS)
 	},

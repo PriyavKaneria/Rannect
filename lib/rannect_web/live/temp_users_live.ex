@@ -21,7 +21,7 @@ defmodule RannectWeb.TempUsersLive do
       Phoenix.PubSub.subscribe(PubSub, @online_user_presence)
     end
 
-    IO.inspect(Presence.list(@online_user_presence))
+    # IO.inspect(Presence.list(@online_user_presence))
 
     {
       :ok,
@@ -43,7 +43,7 @@ defmodule RannectWeb.TempUsersLive do
   @impl true
   def terminate(_reason, socket) do
     if socket.assigns.current_user.username != "" do
-      Users.delete_temporary_users(socket.assigns.current_user)
+      Users.delete_temporary_users(socket.assigns.current_user.id)
     end
   end
 
@@ -55,7 +55,8 @@ defmodule RannectWeb.TempUsersLive do
 
   defp handle_leaves(socket, leaves, joins) do
     Enum.reduce(leaves, socket, fn {user, _}, socket ->
-      if !is_nil(user) && !Map.has_key?(joins, user) do
+      if !is_nil(user) && !Map.has_key?(joins, user) &&
+           user == socket.assigns.current_user.id do
         Users.delete_temporary_users(user)
       end
 
@@ -70,7 +71,7 @@ defmodule RannectWeb.TempUsersLive do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff", payload: diff}, socket) do
-    IO.inspect(diff)
+    # IO.inspect(diff)
 
     {
       :noreply,
@@ -86,7 +87,7 @@ defmodule RannectWeb.TempUsersLive do
       %TempUser{}
       |> TempUser.changeset(params["temp_user"])
 
-    IO.inspect(changeset)
+    # IO.inspect(changeset)
 
     {:noreply,
      socket
@@ -112,7 +113,7 @@ defmodule RannectWeb.TempUsersLive do
           Phoenix.PubSub.subscribe(PubSub, chat_presence(user.id))
         end
 
-        IO.inspect(Map.from_struct(user))
+        # IO.inspect(Map.from_struct(user))
 
         {
           :noreply,
