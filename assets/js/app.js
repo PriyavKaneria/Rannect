@@ -44,12 +44,49 @@ Hooks.SetLocation = {
 	mounted() {
 		clearTimeout(this.timeout)
 		this.timeout = setTimeout(() => {
-			navigator.geolocation.getCurrentPosition(function (position) {
+			this.pushMyEvent = this.pushEvent
+			navigator.geolocation.getCurrentPosition((position) => {
+				this.pushEvent = this.pushMyEvent
 				console.log("set location")
 				fetch(
-					`/location?lat=${position.coords.latitude}&long=${position.coords.longitude}`,
+					`/location?lat=${position.coords.latitude}&long=${position.coords.longitude}&temp=false`,
+					{ method: "get" }
+				).then((res) => {
+					console.log(res)
+					this.pushEvent("update_user_location", { location: res.json() })
+				})
+			})
+		}, this.DEBOUNCE_MS)
+	},
+}
+
+Hooks.SetTempLocation = {
+	DEBOUNCE_MS: 200,
+	user() {
+		return this.el.dataset.user
+	},
+	mounted() {
+		clearTimeout(this.timeout)
+		this.timeout = setTimeout(() => {
+			this.pushMyEvent = this.pushEvent
+			this.cuser = this.user()
+			// console.log(this.cuser)
+			navigator.geolocation.getCurrentPosition((position) => {
+				this.pushEvent = this.pushMyEvent
+				this.myuser = this.cuser
+				// console.log(this.myuser)
+				console.log("set location")
+				fetch(
+					`/location?lat=${position.coords.latitude}&long=${position.coords.longitude}&temp=true&user=${this.myuser}`,
 					{ method: "get" }
 				)
+					.then((res) => {
+						return res.json()
+					})
+					.then((res) => {
+						console.log(res)
+						this.pushEvent("update_user_location", { location: res })
+					})
 			})
 		}, this.DEBOUNCE_MS)
 	},
@@ -91,7 +128,7 @@ Hooks.AutoSpin = {
 Hooks.AutoSpinStart = {
 	mounted() {
 		window.autoSpin = this
-		setAutoSpin(true)
+		// setAutoSpin(true)
 	},
 	toggle(checked) {
 		setAutoSpin(checked)

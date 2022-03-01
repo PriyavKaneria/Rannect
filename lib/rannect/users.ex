@@ -66,6 +66,21 @@ defmodule Rannect.Users do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
+  @doc """
+  Gets a single temp user.
+  
+  Raises `Ecto.NoResultsError` if the TempUser does not exist.
+  
+  ## Examples
+  
+      iex> get_temp_user!(123)
+      %TempUser{}
+  
+      iex> get_temp_user!(456)
+      ** (Ecto.NoResultsError)
+  """
+  def get_temp_user!(id), do: Repo.get!(TempUser, id)
+
   ## User registration
 
   @doc """
@@ -290,7 +305,7 @@ defmodule Rannect.Users do
   Delete all data of temporary users.
   """
   def delete_temporary_users(user) do
-    Repo.delete_all(from TempUser, where: [temp_user_id: ^user.id])
+    Repo.delete_all(from TempUser, where: [id: ^user])
     :ok
   end
 
@@ -429,6 +444,15 @@ defmodule Rannect.Users do
   def update_location(user, attrs \\ %{}) do
     user
     |> User.location_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Update location of temporary user.
+  """
+  def update_temp_location(user, attrs \\ %{}) do
+    user
+    |> TempUser.location_changeset(attrs)
     |> Repo.update()
   end
 

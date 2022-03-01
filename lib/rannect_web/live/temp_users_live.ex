@@ -9,8 +9,8 @@ defmodule RannectWeb.TempUsersLive do
   # alias Rannect.Users.Invite
 
   @online_user_presence "rannect:online-user-presence"
-  # defp invitation_presence(user_id), do: "rannect:invitation-presence#{user_id}"
-  # defp chat_presence(user_id), do: "rannect:chat-presence#{user_id}"
+  defp invitation_presence(user_id), do: "rannect:invitation-presence#{user_id}"
+  defp chat_presence(user_id), do: "rannect:chat-presence#{user_id}"
 
   @impl true
   def mount(_params, _session, socket) do
@@ -21,6 +21,8 @@ defmodule RannectWeb.TempUsersLive do
       Phoenix.PubSub.subscribe(PubSub, @online_user_presence)
     end
 
+    IO.inspect(Presence.list(@online_user_presence))
+
     {
       :ok,
       socket
@@ -28,14 +30,21 @@ defmodule RannectWeb.TempUsersLive do
       |> assign(:current_user, %{:username => "", :id => ""})
       |> assign(:users, %{})
       |> assign(:user_changeset, TempUser.changeset(%TempUser{}, %{}))
-      # |> assign(:user_sent_invites, sent_invites_users)
-      # |> assign(:user_received_invites, received_invites_users)
+      |> assign(:user_sent_invites, [])
+      |> assign(:user_received_invites, %{})
       # |> assign(:rannections, rannections)
       # |> assign(:online_rannections, %{})
       # |> assign(:rannection_chats, %{})
       # |> assign(:chat_changeset, TempChat.changeset(%Chat{}, %{}))
-      # |> handle_joins(Presence.list(@online_user_presence))
+      |> handle_joins(Presence.list(@online_user_presence))
     }
+  end
+
+  @impl true
+  def terminate(_reason, socket) do
+    if socket.assigns.current_user.username != "" do
+      Users.delete_temporary_users(socket.assigns.current_user)
+    end
   end
 
   defp handle_joins(socket, joins) do
@@ -44,9 +53,12 @@ defmodule RannectWeb.TempUsersLive do
     end)
   end
 
-  defp handle_leaves(socket, leaves) do
+  defp handle_leaves(socket, leaves, joins) do
     Enum.reduce(leaves, socket, fn {user, _}, socket ->
-      Users.delete_user_data(user)
+      if !is_nil(user) && !Map.has_key?(joins, user) do
+        Users.delete_temporary_users(user)
+      end
+
       assign(socket, :users, Map.delete(socket.assigns.users, user))
     end)
   end
@@ -58,10 +70,12 @@ defmodule RannectWeb.TempUsersLive do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff", payload: diff}, socket) do
+    IO.inspect(diff)
+
     {
       :noreply,
       socket
-      |> handle_leaves(diff.leaves)
+      |> handle_leaves(diff.leaves, diff.joins)
       |> handle_joins(diff.joins)
     }
   end
@@ -81,9 +95,11 @@ defmodule RannectWeb.TempUsersLive do
 
   @impl true
   def handle_event("set_username", params, socket) do
-    # Make user using params["temp_user"]
     case Users.register_temporary_user(params["temp_user"]) do
       {:ok, user} ->
+        sent_invites_users = Users.get_user_sent_invites(user)
+        received_invites_users = Users.get_user_received_invites(user)
+
         if connected?(socket) do
           {:ok, _} =
             Presence.track(self(), @online_user_presence, user.id, %{
@@ -91,12 +107,19 @@ defmodule RannectWeb.TempUsersLive do
               location: user.location,
               joined_at: :os.system_time(:seconds)
             })
+
+          Phoenix.PubSub.subscribe(PubSub, invitation_presence(user.id))
+          Phoenix.PubSub.subscribe(PubSub, chat_presence(user.id))
         end
+
+        IO.inspect(Map.from_struct(user))
 
         {
           :noreply,
           socket
-          |> assign(:current_user, user)
+          |> assign(:current_user, Map.from_struct(user))
+          |> assign(:user_sent_invites, sent_invites_users)
+          |> assign(:user_received_invites, received_invites_users)
         }
 
       {:error, changeset} ->
@@ -106,6 +129,30 @@ defmodule RannectWeb.TempUsersLive do
           |> assign(:user_changeset, changeset)
         }
     end
+  end
+
+  @impl true
+  def handle_event("update_user_location", _params, socket) do
+    # IO.inspect(params)
+    # IO.inspect(socket.assigns.users)
+    user = Users.get_temp_user!(Integer.to_string(socket.assigns.current_user.id))
+
+    Presence.update(self(), @online_user_presence, user.id, %{
+      username: user.username,
+      location: user.location,
+      joined_at: :os.system_time(:seconds)
+    })
+
+    {:noreply,
+     socket
+     |> assign(
+       :users,
+       Map.put(
+         socket.assigns.users,
+         Integer.to_string(user.id),
+         Map.from_struct(user)
+       )
+     )}
   end
 
   # @impl true

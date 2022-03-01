@@ -81,7 +81,6 @@ defmodule RannectWeb.Router do
     pipe_through [:browser, :require_authenticated_user]
 
     # get "/", PageController, :index
-    get "/location", UserLocationController, :updateLocation
     live "/secure", UsersLive, :index
     get "/users/settings", UserSettingsController, :edit
     put "/users/settings", UserSettingsController, :update
@@ -91,6 +90,7 @@ defmodule RannectWeb.Router do
   scope "/", RannectWeb do
     pipe_through [:browser]
 
+    get "/location", UserLocationController, :updateLocation
     delete "/users/log_out", UserSessionController, :delete
     get "/users/confirm", UserConfirmationController, :new
     post "/users/confirm", UserConfirmationController, :create

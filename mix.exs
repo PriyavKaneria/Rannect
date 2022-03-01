@@ -54,7 +54,8 @@ defmodule Rannect.MixProject do
       {:geonames, "~> 1.0.4"},
       {:poison, "> 3.0.0"},
       {:hackney, "~> 1.18.0"},
-      {:remote_ip, "~> 1.0.0"}
+      {:remote_ip, "~> 1.0.0"},
+      {:json, "~> 1.4.1"}
     ]
   end
 

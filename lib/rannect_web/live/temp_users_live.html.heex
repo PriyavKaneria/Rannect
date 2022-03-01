@@ -3,17 +3,18 @@
 <script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/6043/css_globe_PerspectiveTransform.js" type="text/javascript"></script>
 <%# <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r11/Stats.js" type="text/javascript"></script> %>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js" type="text/javascript"></script>
-<%# <span class="hidden" id="location_data" phx-hook="SetLocation"></span> %>
 
 <%= if @current_user.username == "" do %>
     <%= live_component RannectWeb.Components.UserForm, user_changeset: @user_changeset, user_ip: @user_ip %>
+<% else %>
+    <span class="hidden" id="location_data" phx-hook="SetTempLocation" data-user={@current_user.id}></span>
 <% end %>
 <div class="relative flex justify-center items-center z-30 overflow-visible h-screen w-0 mx-auto">
     <div class="world-container z-30 overflow-visible">
         <div class="world overflow-visible" phx-hook="WorldInitialize" id="world">
             <div class="world-globe">
                 <div class="world-globe-pole">
-                    <div class="autospin w-6 h-6 absolute bottom-12 right-0 z-30 inline-block overflow-visible" x-data="{hover : false, checked : true}">
+                    <div class="autospin w-6 h-6 absolute bottom-12 right-0 z-30 inline-block overflow-visible" x-data="{hover : false, checked : false}" x-init="checked=true">
                         <div id="auto-spin" class="w-6 h-6 absolute bg-black bg-opacity-50 rounded-full hover:bg-opacity-90 border border-black duration-100 z-20" @mouseenter="hover=true" @mouseleave="hover=false" @click="checked = !checked;autoSpin.toggle(checked)" phx-hook="AutoSpinStart">
                             <svg x-show="checked" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 -mt-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -38,5 +39,5 @@
     </div>
 </div>
 <div class="markers-container" phx-hook="UpdateMarkers" id="marker-container">
-    <%= live_component RannectWeb.Components.UserPopup, current_user: @current_user, users: @users, type: "users" %>
+    <%= live_component RannectWeb.Components.UserPopup, current_user: @current_user, users: @users, type: "users", sent: @user_sent_invites, received: @user_received_invites %>
 </div>
