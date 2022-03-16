@@ -101,7 +101,7 @@ export function init(ref) {
 	globe.addEventListener("wheel", onMouseScroll)
 
 	calcMarkers()
-	loadMarkers()
+	// loadMarkers()
 	updateMarkerPositions()
 	loop()
 }
@@ -116,10 +116,20 @@ function updateMarkerSegments(marker, lat, lng) {
 	var dtheta = rtheta - vertices[i - 1][0].theta
 	var dphi = rphi - vertices[i - 1][j - 1].phi
 	// console.log(lat, lng, i, j, dtheta, dphi)
-	markerSegments[[i - 1, j - 1]] = {
-		marker: marker,
-		dtheta: dtheta,
-		dphi: dphi,
+	if (markerSegments[[i - 1, j - 1]]) {
+		markerSegments[[i - 1, j - 1]].push({
+			marker: marker,
+			dtheta: dtheta,
+			dphi: dphi,
+		})
+	} else {
+		markerSegments[[i - 1, j - 1]] = [
+			{
+				marker: marker,
+				dtheta: dtheta,
+				dphi: dphi,
+			},
+		]
 	}
 }
 
@@ -127,21 +137,38 @@ export function calcMarkers() {
 	markers = document.getElementsByClassName("world-marker")
 	for (var i = 0; i < markers.length; i++) {
 		var marker = markers[i]
-		var plat = 0
-		var plng = 0
+		// var plat = 0
+		// var plng = 0
 		// if (marker.attributes.lat)
-		plat = parseFloat(marker.attributes.lat?.nodeValue)
+		// console.log(markers, marker)
+		var plat = parseFloat(marker.attributes.lat?.nodeValue)
 		// if (marker.attributes.lng)
-		plng = parseFloat(marker.attributes.lng?.nodeValue)
+		var plng = parseFloat(marker.attributes.lng?.nodeValue)
 		// console.log(plat, plng)
-		updateMarkerSegments(marker, plat, plng)
-		// markerSegments[[0, 0]] = marker
+		if (marker.attributes.lat && marker.attributes.lng) {
+			updateMarkerSegments(marker, plat, plng)
+		}
+		// marker.classList.remove("world-marker")
+		// marker.classList.add("world-marker-static")
+		// marker.removeAttribute("userid")
 	}
+	loadMarkers()
 	// console.log(markerSegments)
 }
 
+function removeAllChildNodes(parent, userid) {
+	while (parent.firstChild) {
+		if (
+			parent.firstChild.attributes.userid &&
+			parent.firstChild.attributes.userid.nodeValue == userid
+		) {
+			parent.removeChild(parent.firstChild)
+		}
+	}
+}
+
 export function loadMarkers() {
-	// console.log("loadMarkers")
+	console.log("loadMarkers")
 	var segY = config.segY
 	var segX = config.segX
 	var segHeight = Math.PI / 13.333333333333334
@@ -149,12 +176,19 @@ export function loadMarkers() {
 	for (y = 0; y <= segY; y++) {
 		for (x = 0; x <= segX; x++) {
 			if (markerSegments[[y, x]]) {
-				var marker = markerSegments[[y, x]].marker
-				globeDoms[x + segX * y].appendChild(marker)
-				marker.style.position = "absolute"
-				marker.style.left = (markerSegments[[y, x]].dphi / segWidth) * 100 + "%"
-				marker.style.top =
-					(markerSegments[[y, x]].dtheta / segHeight) * 100 + "%"
+				markerSegments[[y, x]].forEach((markerData) => {
+					var marker = markerData.marker
+					// console.log(marker)
+					removeAllChildNodes(
+						globeDoms[x + segX * y],
+						marker.attributes.userid.nodeValue
+					)
+					console.log(globeDoms[x + segX * y])
+					globeDoms[x + segX * y].appendChild(marker)
+					marker.style.position = "absolute"
+					marker.style.left = (markerData.dphi / segWidth) * 100 + "%"
+					marker.style.top = (markerData.dtheta / segHeight) * 100 + "%"
+				})
 			}
 		}
 	}
@@ -170,9 +204,11 @@ function updateMarkerPositions() {
 	// console.log(markers)
 	for (const marker of markers) {
 		// console.log(marker.attributes.userid.nodeValue)
+		if (!marker) continue
 		var mrkr = document.getElementById(
 			"marker-" + marker.attributes.userid.nodeValue
 		)
+		if (!mrkr) continue
 		mrkrRect = marker.getBoundingClientRect()
 		mrkr.style.left = mrkrRect.left + "px"
 		mrkr.style.top = mrkrRect.top + "px"

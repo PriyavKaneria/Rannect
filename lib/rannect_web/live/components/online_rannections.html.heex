@@ -6,7 +6,7 @@
     <div class="bg-white bg-opacity-90 px-3 py-2 flex flex-col space-y-2 rounded-b-lg max-h-52 overflow-auto" x-data>
         <%= if Enum.count(@users)!=0 do %>
             <%= for {userid,user} <- @users do %>
-                <button class="text-normal text-black capitalize cursor-pointer" phx-hook="MarkerGoto" id={"marker-goto-" <> userid} @click={"markerGoto.goto(" <> userid <>")"}>
+                <button class="text-normal text-black capitalize cursor-pointer" phx-hook="MarkerGoto" id={"marker-goto-" <> userid} x-on:click={"markerGoto.goto(" <> userid <>")"}>
                     <%= user.username %> - <%= user.location["country"] %>
                 </button>
             <% end %>

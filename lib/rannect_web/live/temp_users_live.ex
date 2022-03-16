@@ -257,41 +257,41 @@ defmodule RannectWeb.TempUsersLive do
   #   }
   # end
 
-  # @impl true
-  # def handle_event("invite", params, socket) do
-  #   # IO.puts(params["invitee"]<>" "<>params["inviter"])
-  #   user_struct = Users.get_user!(socket.assigns.current_user[:id])
+  @impl true
+  def handle_event("invite", params, socket) do
+    # IO.puts(params["invitee"]<>" "<>params["inviter"])
+    user_struct = Users.get_temp_user!(socket.assigns.current_user[:id])
 
-  #   case Users.invite_user(%{
-  #          :invitee => params["invitee"],
-  #          :inviter => params["inviter"]
-  #        }) do
-  #     {:ok, :ok} ->
-  #       Phoenix.PubSub.broadcast(
-  #         PubSub,
-  #         invitation_presence(params["invitee"]),
-  #         "invite_received"
-  #       )
+    case Users.invite_user(%{
+           :invitee => params["invitee"],
+           :inviter => params["inviter"]
+         }) do
+      {:ok, :ok} ->
+        Phoenix.PubSub.broadcast(
+          PubSub,
+          invitation_presence(params["invitee"]),
+          "invite_received"
+        )
 
-  #       sent_invites_users = Users.get_user_sent_invites(user_struct)
-  #       received_invites_users = Users.get_user_received_invites(user_struct)
+        sent_invites_users = Users.get_user_sent_invites(user_struct)
+        received_invites_users = Users.get_user_received_invites(user_struct)
 
-  #       {
-  #         :noreply,
-  #         socket
-  #         |> assign(:user_sent_invites, sent_invites_users)
-  #         |> assign(:user_received_invites, received_invites_users)
-  #       }
+        {
+          :noreply,
+          socket
+          |> assign(:user_sent_invites, sent_invites_users)
+          |> assign(:user_received_invites, received_invites_users)
+        }
 
-  #     {:error, :already_invited} ->
-  #       {:noreply,
-  #        socket |> put_flash("error", "You have already sent an invitation to this user")}
+      {:error, :already_invited} ->
+        {:noreply,
+         socket |> put_flash("error", "You have already sent an invitation to this user")}
 
-  #     {:error, :already_invited_user} ->
-  #       {:noreply,
-  #        socket |> put_flash("error", "You already have a pending invitation of this user")}
-  #   end
-  # end
+      {:error, :already_invited_user} ->
+        {:noreply,
+         socket |> put_flash("error", "You already have a pending invitation of this user")}
+    end
+  end
 
   # @impl true
   # def handle_event("accept_invite", params, socket) do

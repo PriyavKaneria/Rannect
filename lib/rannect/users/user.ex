@@ -17,7 +17,9 @@ defmodule Rannect.Users.User do
     field :rannections, {:array, :integer}, default: []
 
     has_many :sent_invites, Invite, foreign_key: :inviter
+    has_many :sent_temp_invites, TempInvite, foreign_key: :temp_inviter
     has_many :received_invites, Invite, foreign_key: :invitee
+    has_many :received_temp_invites, TempInvite, foreign_key: :temp_invitee
 
     timestamps()
   end

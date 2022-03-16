@@ -10,8 +10,8 @@ defmodule Rannect.Users.TempUser do
     field :ip_address, :string, required: true
     field :location, :map, default: %{}
 
-    has_many :sent_invites, TempInvite, foreign_key: :inviter
-    has_many :received_invites, TempInvite, foreign_key: :invitee
+    has_many :sent_invites, TempInvite, foreign_key: :temp_inviter
+    has_many :received_invites, TempInvite, foreign_key: :temp_invitee
 
     timestamps()
   end
@@ -58,6 +58,14 @@ defmodule Rannect.Users.TempUser do
     )
   end
 
+  @spec location_changeset(
+          {map, map}
+          | %{
+              :__struct__ => atom | %{:__changeset__ => map, optional(any) => any},
+              optional(atom) => any
+            },
+          any
+        ) :: Ecto.Changeset.t()
   @doc """
   Sets the location of the user.
   """

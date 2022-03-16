@@ -6,7 +6,7 @@
             invitation = " <> inspect(Map.keys(@received)) <> ".includes(" <> user_id <> ");
             open = chatting || invited || invitation;"}
         @keydown.escape.window="open = false">
-        <div class="location-pin" aria-label="User Marker" aria-haspopup="true" @click={"if('" <> @current_user.username <> "'!= ''){open = !open}"}>
+        <div class="location-pin" aria-label="User Marker" aria-haspopup="true" x-on:click={"if('" <> @current_user.username <> "'!= ''){open = !open}"}>
             <img src="https://picsum.photos/300">
             <div class='pin'></div>
             <%= if @type=="rannections" do %>

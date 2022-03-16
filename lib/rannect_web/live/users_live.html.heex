@@ -11,7 +11,7 @@
             <div class="world-globe">
                 <div class="world-globe-pole">
                     <div class="autospin w-6 h-6 absolute bottom-12 right-0 z-30 inline-block overflow-visible" x-data="{hover : false, checked : false}">
-                        <div id="auto-spin" class="w-6 h-6 absolute bg-black bg-opacity-50 rounded-full hover:bg-opacity-90 border border-black duration-100 z-20" @mouseenter="hover=true" @mouseleave="hover=false" @click="checked = !checked;autoSpin.toggle(checked)" phx-hook="AutoSpin">
+                        <div id="auto-spin" class="w-6 h-6 absolute bg-black bg-opacity-50 rounded-full hover:bg-opacity-90 border border-black duration-100 z-20" @mouseenter="hover=true" @mouseleave="hover=false" x-on:click="checked = !checked;autoSpin.toggle(checked)" phx-hook="AutoSpin">
                             <svg x-show="checked" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 -mt-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>

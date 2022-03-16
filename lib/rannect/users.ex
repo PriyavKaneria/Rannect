@@ -618,10 +618,10 @@ defmodule Rannect.Users do
         |> Ecto.Changeset.change(accepted: true)
         |> Repo.update()
 
-        Rannections.create_rannection(%{
-          inviter: invite.inviter,
-          invitee: invite.invitee
-        })
+        # Rannections.create_rannection(%{
+        #   inviter: invite.inviter,
+        #   invitee: invite.invitee
+        # })
     end
   end
 
