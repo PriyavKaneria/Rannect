@@ -6,8 +6,8 @@ defmodule Rannect.Users do
   import Ecto.Query, warn: false
   alias Rannect.Repo
 
-  alias Rannect.Users.{User, UserToken, UserNotifier, Invite, TempUser}
-  alias Rannect.Rannections
+  alias Rannect.Users.{User, UserToken, UserNotifier, Invite, TempUser, TempInvite}
+  # alias Rannect.Rannections
 
   ## Database getters
 
@@ -461,13 +461,26 @@ defmodule Rannect.Users do
   
   ## Examples
   
-      iex> get_invite_by_id(1)
+      iex> get_invite!(1)
       %Invite{}
   
-      iex> get_invite_by_id(2)
+      iex> get_invite!(2)
       nil
   """
   def get_invite!(id), do: Repo.get!(Invite, id)
+
+  @doc """
+  Get temp invite from id.
+  
+  ## Examples
+  
+      iex> get_temp_invite!(1)
+      %Invite{}
+  
+      iex> get_temp_invite!(2)
+      nil
+  """
+  def get_temp_invite!(id), do: Repo.get!(TempInvite, id)
 
   @doc """
   Gets all invites of user.
@@ -486,7 +499,7 @@ defmodule Rannect.Users do
     sent_invites_users =
       for invite <- sent_invites, !Invite.is_invitation_accepted?(invite) do
         invite = Map.from_struct(invite)
-        invite[:invitee]
+        Integer.to_string(invite[:invitee])
       end
 
     sent_invites_users
@@ -509,10 +522,176 @@ defmodule Rannect.Users do
     received_invites_users =
       for invite <- received_invites, !Invite.is_invitation_accepted?(invite), into: %{} do
         invite = Map.from_struct(invite)
-        {invite[:inviter], invite[:id]}
+        {Integer.to_string(invite[:inviter]), Integer.to_string(invite[:id])}
       end
 
     received_invites_users
+  end
+
+  @doc """
+  Gets all invites of temp user.
+  
+  Returns list of Invite schema.
+  
+  ## Examples
+  
+      iex> get_temp_user_sent_invites(user)
+      [%Invite{}, %Invite{}, ...]
+  
+  """
+  def get_temp_user_sent_invites(user) do
+    sent_invites = Repo.all(Ecto.assoc(user, :sent_invites))
+
+    sent_invites_users =
+      for invite <- sent_invites, !Invite.is_invitation_accepted?(invite) do
+        invite = Map.from_struct(invite)
+        Integer.to_string(invite[:invitee])
+      end
+
+    sent_invites_users
+  end
+
+  @doc """
+  Gets all invites of temp user.
+  
+  Returns list of Invite schema.
+  
+  ## Examples
+  
+      iex> get_temp_user_sent_invites(user)
+      [%Invite{}, %Invite{}, ...]
+  
+  """
+  def get_temp_user_sent_temp_invites(user) do
+    sent_temp_invites = Repo.all(Ecto.assoc(user, :sent_temp_invites))
+
+    sent_invites_users =
+      for invite <- sent_temp_invites, !TempInvite.is_invitation_accepted?(invite) do
+        invite = Map.from_struct(invite)
+        Integer.to_string(invite.temp_invitee)
+      end
+
+    sent_invites_users
+  end
+
+  @doc """
+  Gets all invites of temp user.
+  
+  Returns list of Invite schema.
+  
+  ## Examples
+  
+      iex> get_temp_user_received_invites(user)
+      [%Invite{}, %Invite{}, ...]
+  
+  """
+  def get_temp_user_received_invites(user) do
+    received_invites = Repo.all(Ecto.assoc(user, :received_invites))
+
+    received_invites_users =
+      for invite <- received_invites, !Invite.is_invitation_accepted?(invite), into: %{} do
+        invite = Map.from_struct(invite)
+        {Integer.to_string(invite[:inviter]), Integer.to_string(invite[:id])}
+      end
+
+    received_invites_users
+  end
+
+  @doc """
+  Gets all invites of temp user.
+  
+  Returns list of Invite schema.
+  
+  ## Examples
+  
+      iex> get_temp_user_received_invites(user)
+      [%Invite{}, %Invite{}, ...]
+  
+  """
+  def get_temp_user_received_temp_invites(user) do
+    received_temp_invites = Repo.all(Ecto.assoc(user, :received_temp_invites))
+
+    received_invites_users =
+      for invite <- received_temp_invites,
+          !TempInvite.is_invitation_accepted?(invite),
+          into: %{} do
+        invite = Map.from_struct(invite)
+        {Integer.to_string(invite[:temp_inviter]), Integer.to_string(invite[:id])}
+      end
+
+    received_invites_users
+  end
+
+  @doc """
+  Get temp user accepted invites.
+  
+  Returns list of Invite schema.
+  
+  ## Examples
+  
+      iex> get_temp_user_accepted_invites(user)
+      [%Invite{}, %Invite{}, ...]
+  
+  """
+  def get_temp_user_accepted_invites(user) do
+    # Get all invites where inviteid = userid or invitee = userid
+    # and where invitation is accepted
+    all_sent_invites_of_user = Repo.all(Ecto.assoc(user, :sent_invites))
+    all_received_invites_of_user = Repo.all(Ecto.assoc(user, :received_invites))
+
+    all_sent_temp_invites_of_user = Repo.all(Ecto.assoc(user, :sent_temp_invites))
+    all_received_temp_invites_of_user = Repo.all(Ecto.assoc(user, :received_temp_invites))
+
+    # IO.inspect(all_invites)
+    # IO.inspect(all_temp_invites)
+
+    accepted_sent_invites_users =
+      for invite <- all_sent_invites_of_user, Invite.is_invitation_accepted?(invite) do
+        invite = Map.from_struct(invite)
+        Integer.to_string(invite.invitee)
+      end
+
+    accepted_sent_temp_invites_users =
+      for invite <- all_sent_temp_invites_of_user, TempInvite.is_invitation_accepted?(invite) do
+        invite = Map.from_struct(invite)
+        Integer.to_string(invite.temp_invitee)
+      end
+
+    accepted_received_invites_users =
+      for invite <- all_received_invites_of_user, Invite.is_invitation_accepted?(invite) do
+        invite = Map.from_struct(invite)
+        Integer.to_string(invite.inviter)
+      end
+
+    accepted_received_temp_invites_users =
+      for invite <- all_received_temp_invites_of_user,
+          TempInvite.is_invitation_accepted?(invite) do
+        invite = Map.from_struct(invite)
+        Integer.to_string(invite.temp_inviter)
+      end
+
+    # IO.inspect(accepted_invites_users)
+    # IO.inspect(accepted_temp_invites_users)
+
+    accepted_sent_invites_users ++
+      accepted_sent_temp_invites_users ++
+      accepted_received_invites_users ++ accepted_received_temp_invites_users
+  end
+
+  defp check_temp_invites(inviter_id, invitee_id) do
+    with %TempInvite{} = invite <-
+           Repo.get_by(TempInvite, invitee: invitee_id, temp_inviter: inviter_id),
+         invite do
+      {:error, :already_invited}
+    else
+      :error ->
+        IO.puts("deleting invites")
+        Repo.delete_all(TempInvite, temp_inviter: inviter_id, invitee: invitee_id)
+        {:ok, :ok}
+
+      _ ->
+        {:ok, :ok}
+    end
   end
 
   defp check_invites(inviter_id, invitee_id) do
@@ -523,6 +702,22 @@ defmodule Rannect.Users do
       :error ->
         IO.puts("deleting invites")
         Repo.delete_all(Invite, inviter: inviter_id, invitee: invitee_id)
+        {:ok, :ok}
+
+      _ ->
+        {:ok, :ok}
+    end
+  end
+
+  defp check_temp_invited(inviter_id, invitee_id) do
+    with %TempInvite{} = invite <-
+           Repo.get_by(TempInvite, temp_invitee: invitee_id, inviter: inviter_id),
+         invite do
+      {:error, :already_invited_user}
+    else
+      :error ->
+        IO.puts("deleting invites")
+        Repo.delete_all(TempInvite, inviter: inviter_id, temp_invitee: invitee_id)
         {:ok, :ok}
 
       _ ->
@@ -545,21 +740,212 @@ defmodule Rannect.Users do
     end
   end
 
+  defp check_temp_invited_temp(inviter_id, invitee_id) do
+    with %TempInvite{} = invite <-
+           Repo.get_by(TempInvite, temp_invitee: invitee_id, temp_inviter: inviter_id),
+         invite do
+      {:error, :already_invited_user}
+    else
+      :error ->
+        IO.puts("deleting invites")
+        Repo.delete_all(TempInvite, temp_inviter: inviter_id, temp_invitee: invitee_id)
+        {:ok, :ok}
+
+      _ ->
+        {:ok, :ok}
+    end
+  end
+
   @doc """
-  Invite user.
+  Temp User Invite temp user.
   
   ## Examples
   
-      iex> invite_user(user)
+      iex> temp_invite_temp_user(attrs)
       [%User{}, %User{}, ...]
   
   """
-  def invite_user(attrs) do
+  def temp_invite_temp_user(attrs) do
+    # now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+    invitee = get_temp_user!(attrs[:temp_invitee])
+    inviter = get_temp_user!(attrs[:temp_inviter])
+    invitee = invitee |> Repo.preload(:received_temp_invites)
+
+    inviter =
+      inviter
+      |> Repo.preload(:sent_temp_invites)
+      |> Repo.preload(:received_temp_invites)
+      |> Repo.preload(:received_invites)
+
+    # CHECK IF ALREADY INVITED
+    case check_temp_invited_temp(inviter.id, invitee.id) do
+      {:ok, _} ->
+        case check_temp_invited_temp(invitee.id, inviter.id) do
+          {:ok, _} ->
+            case %TempInvite{
+                   accepted: false
+                 }
+                 |> TempInvite.invite_changeset(attrs)
+                 |> Repo.insert() do
+              {:ok, invite} ->
+                invitee
+                |> Ecto.Changeset.change()
+                |> Ecto.Changeset.put_assoc(:received_temp_invites, [
+                  invite | invitee.received_temp_invites
+                ])
+                |> Repo.update!()
+
+                inviter
+                |> Ecto.Changeset.change()
+                |> Ecto.Changeset.put_assoc(:sent_temp_invites, [
+                  invite | inviter.sent_temp_invites
+                ])
+                |> Repo.update!()
+            end
+
+            {:ok, :ok}
+
+          {:error, :already_invited_user} ->
+            {:error, :already_invited_user}
+        end
+
+      {:error, :already_invited_user} ->
+        {:error, :already_invited}
+    end
+  end
+
+  @doc """
+  Temp User Invite user.
+  
+  ## Examples
+  
+      iex> temp_invite_user(attrs)
+      [%User{}, %User{}, ...]
+  
+  """
+  def temp_invite_user(attrs) do
+    # now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+    invitee = get_user!(attrs[:invitee])
+    inviter = get_temp_user!(attrs[:temp_inviter])
+    invitee = invitee |> Repo.preload(:received_temp_invites)
+
+    inviter =
+      inviter
+      |> Repo.preload(:sent_invites)
+      |> Repo.preload(:received_invites)
+      |> Repo.preload(:received_temp_invites)
+
+    # CHECK IF ALREADY INVITED
+    case check_temp_invites(inviter.id, invitee.id) do
+      {:ok, _} ->
+        case check_temp_invited(invitee.id, inviter.id) do
+          {:ok, _} ->
+            case %TempInvite{
+                   accepted: false
+                 }
+                 |> TempInvite.invite_changeset(attrs)
+                 |> Repo.insert() do
+              {:ok, invite} ->
+                invitee
+                |> Ecto.Changeset.change()
+                |> Ecto.Changeset.put_assoc(:received_temp_invites, [
+                  invite | invitee.received_temp_invites
+                ])
+                |> Repo.update!()
+
+                inviter
+                |> Ecto.Changeset.change()
+                |> Ecto.Changeset.put_assoc(:sent_invites, [invite | inviter.sent_invites])
+                |> Repo.update!()
+            end
+
+            {:ok, :ok}
+
+          {:error, :already_invited_user} ->
+            {:error, :already_invited_user}
+        end
+
+      {:error, :already_invited} ->
+        {:error, :already_invited}
+    end
+  end
+
+  @doc """
+  User Invite temp user.
+  
+  ## Examples
+  
+      iex> user_invite_temp(attrs)
+      [%User{}, %User{}, ...]
+  
+  """
+  def user_invite_temp(attrs) do
+    # now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+    invitee = get_temp_user!(attrs[:temp_invitee])
+    inviter = get_user!(attrs[:inviter])
+    invitee = invitee |> Repo.preload(:received_invites)
+
+    inviter =
+      inviter
+      |> Repo.preload(:sent_temp_invites)
+      |> Repo.preload(:received_invites)
+      |> Repo.preload(:received_temp_invites)
+
+    # CHECK IF ALREADY INVITED
+    case check_temp_invites(inviter.id, invitee.id) do
+      {:ok, _} ->
+        case check_temp_invited(invitee.id, inviter.id) do
+          {:ok, _} ->
+            case %TempInvite{
+                   accepted: false
+                 }
+                 |> TempInvite.invite_changeset(attrs)
+                 |> Repo.insert() do
+              {:ok, invite} ->
+                invitee
+                |> Ecto.Changeset.change()
+                |> Ecto.Changeset.put_assoc(:received_invites, [invite | invitee.received_invites])
+                |> Repo.update!()
+
+                inviter
+                |> Ecto.Changeset.change()
+                |> Ecto.Changeset.put_assoc(:sent_temp_invites, [
+                  invite | inviter.sent_temp_invites
+                ])
+                |> Repo.update!()
+            end
+
+            {:ok, :ok}
+
+          {:error, :already_invited_user} ->
+            {:error, :already_invited}
+        end
+
+      {:error, :already_invited} ->
+        {:error, :already_invited_user}
+    end
+  end
+
+  @doc """
+  User Invite user.
+  
+  ## Examples
+  
+      iex> user_invite_user(attrs)
+      [%User{}, %User{}, ...]
+  
+  """
+  def user_invite_user(attrs) do
     # now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
     invitee = get_user!(attrs[:invitee])
     inviter = get_user!(attrs[:inviter])
     invitee = invitee |> Repo.preload(:received_invites)
-    inviter = inviter |> Repo.preload(:sent_invites) |> Repo.preload(:received_invites)
+
+    inviter =
+      inviter
+      |> Repo.preload(:sent_invites)
+      |> Repo.preload(:received_invites)
+      |> Repo.preload(:received_temp_invites)
 
     # CHECK IF ALREADY INVITED
     case check_invites(inviter.id, invitee.id) do
@@ -640,6 +1026,56 @@ defmodule Rannect.Users do
     cond do
       Invite.is_invitation_accepted?(invite) -> {:error, :already_accepted}
       !Invite.is_user_invited?(invite, userid) -> {:error, :not_invited}
+      true -> invite |> Repo.delete()
+    end
+  end
+
+  @doc """
+  Accepts temp invite.
+  
+  ## Examples
+  
+      iex> accept_temp_invite(inviteid, user)
+      {:ok, %User{}}
+  
+  """
+  def accept_temp_invite(inviteid, userid) do
+    invite = get_temp_invite!(inviteid)
+
+    cond do
+      TempInvite.is_invitation_accepted?(invite) ->
+        {:error, :already_accepted}
+
+      !TempInvite.is_user_invited?(invite, userid) ->
+        {:error, :not_invited}
+
+      true ->
+        invite
+        |> Ecto.Changeset.change(accepted: true)
+        |> Repo.update()
+
+        # Rannections.create_rannection(%{
+        #   inviter: invite.inviter,
+        #   invitee: invite.invitee
+        # })
+    end
+  end
+
+  @doc """
+  Rejects temp invite.
+  
+  ## Examples
+  
+      iex> reject_temp_invite(inviteid, user)
+      {:ok, %User{}}
+  
+  """
+  def reject_temp_invite(inviteid, userid) do
+    invite = get_temp_invite!(inviteid)
+
+    cond do
+      TempInvite.is_invitation_accepted?(invite) -> {:error, :already_accepted}
+      !TempInvite.is_user_invited?(invite, userid) -> {:error, :not_invited}
       true -> invite |> Repo.delete()
     end
   end

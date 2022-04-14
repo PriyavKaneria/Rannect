@@ -3,6 +3,7 @@ defmodule Rannect.Users.User do
   import Ecto.Changeset
 
   alias Rannect.Users.Invite
+  alias Rannect.Users.TempInvite
   # alias Rannect.Rannections.Rannection
 
   schema "users" do

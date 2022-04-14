@@ -309,11 +309,12 @@
 /* Alerts and form errors used by phx.new */
 .alert {
 	padding: 15px;
-	margin-bottom: 20px;
+	margin-left: 25px;
 	border: 1px solid transparent;
 	border-radius: 4px;
 	width: fit-content;
-	margin-top: 75px;
+	margin-top: 125px;
+	position: fixed;
 }
 form .alert {
 	width: 100%;

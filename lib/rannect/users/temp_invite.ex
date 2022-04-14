@@ -21,7 +21,7 @@ defmodule Rannect.Users.TempInvite do
   @doc false
   def invite_changeset(invite, attrs) do
     invite
-    |> cast(attrs, [:inviter, :invitee, :temp_inviter_id, :temp_invitee_id, :accepted])
+    |> cast(attrs, [:inviter, :invitee, :temp_inviter, :temp_invitee, :accepted])
     |> foreign_key_constraint(:invitee)
     |> foreign_key_constraint(:inviter)
     |> foreign_key_constraint(:temp_invitee)
@@ -30,7 +30,7 @@ defmodule Rannect.Users.TempInvite do
     |> assoc_constraint(:inviter_id)
     |> assoc_constraint(:temp_invitee_id)
     |> assoc_constraint(:temp_inviter_id)
-    |> validate_required([:inviter, :invitee, :temp_inviter_id, :temp_invitee_id, :accepted])
+    |> validate_required([:accepted])
   end
 
   @doc """
@@ -41,5 +41,6 @@ defmodule Rannect.Users.TempInvite do
   @doc """
   Returns true if the user is invited in the invite, false otherwise
   """
-  def is_user_invited?(invite, userid), do: invite.invitee == userid
+  def is_user_invited?(invite, userid),
+    do: invite.invitee == userid || invite.temp_invitee == userid
 end

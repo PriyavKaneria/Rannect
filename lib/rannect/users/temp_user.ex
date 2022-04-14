@@ -2,6 +2,7 @@ defmodule Rannect.Users.TempUser do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Rannect.Users.Invite
   alias Rannect.Users.TempInvite
   # alias Rannect.Rannections.Rannection
 
@@ -10,8 +11,10 @@ defmodule Rannect.Users.TempUser do
     field :ip_address, :string, required: true
     field :location, :map, default: %{}
 
-    has_many :sent_invites, TempInvite, foreign_key: :temp_inviter
-    has_many :received_invites, TempInvite, foreign_key: :temp_invitee
+    has_many :sent_invites, Invite, foreign_key: :inviter
+    has_many :sent_temp_invites, TempInvite, foreign_key: :temp_inviter
+    has_many :received_invites, Invite, foreign_key: :invitee
+    has_many :received_temp_invites, TempInvite, foreign_key: :temp_invitee
 
     timestamps()
   end
@@ -58,14 +61,6 @@ defmodule Rannect.Users.TempUser do
     )
   end
 
-  @spec location_changeset(
-          {map, map}
-          | %{
-              :__struct__ => atom | %{:__changeset__ => map, optional(any) => any},
-              optional(atom) => any
-            },
-          any
-        ) :: Ecto.Changeset.t()
   @doc """
   Sets the location of the user.
   """

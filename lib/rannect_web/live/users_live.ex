@@ -1,7 +1,7 @@
 defmodule RannectWeb.UsersLive do
   use RannectWeb, :live_view
   alias Rannect.Users
-  alias Rannect.Rannections
+  # alias Rannect.Rannections
   alias Rannect.Rannections.Chat
 
   alias Rannect.PubSub
@@ -66,11 +66,11 @@ defmodule RannectWeb.UsersLive do
           assign(
             socket,
             :online_rannections,
-            Map.put(socket.assigns.online_rannections, user, meta_map)
+            Map.put(socket.assigns.online_rannections, user, Map.put(meta_map, :type, :user))
           )
 
         true ->
-          assign(socket, :users, Map.put(socket.assigns.users, user, meta))
+          assign(socket, :users, Map.put(socket.assigns.users, user, Map.put(meta, :type, :user)))
       end
     end)
   end

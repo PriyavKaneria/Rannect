@@ -7,6 +7,7 @@ defmodule RannectWeb.TempUsersLive do
   alias Rannect.PubSub
   alias Rannect.Presence
   # alias Rannect.Users.Invite
+  # alias Rannect.Users.TempInvite
 
   @online_user_presence "rannect:online-user-presence"
   defp invitation_presence(user_id), do: "rannect:invitation-presence#{user_id}"
@@ -31,7 +32,10 @@ defmodule RannectWeb.TempUsersLive do
       |> assign(:users, %{})
       |> assign(:user_changeset, TempUser.changeset(%TempUser{}, %{}))
       |> assign(:user_sent_invites, [])
+      |> assign(:user_sent_temp_invites, [])
       |> assign(:user_received_invites, %{})
+      |> assign(:user_received_temp_invites, %{})
+      |> assign(:accepted_invites, [])
       # |> assign(:rannections, rannections)
       # |> assign(:online_rannections, %{})
       # |> assign(:rannection_chats, %{})
@@ -49,7 +53,12 @@ defmodule RannectWeb.TempUsersLive do
 
   defp handle_joins(socket, joins) do
     Enum.reduce(joins, socket, fn {user, %{metas: [meta | _]}}, socket ->
-      assign(socket, :users, Map.put(socket.assigns.users, user, meta))
+      assign(
+        socket,
+        :users,
+        socket.assigns.users
+        |> Map.put(user, meta |> Map.put(:type, :temp) |> Map.put(:chatting, false))
+      )
     end)
   end
 
@@ -82,124 +91,60 @@ defmodule RannectWeb.TempUsersLive do
   end
 
   @impl true
-  def handle_event("validate_username", params, socket) do
-    changeset =
-      %TempUser{}
-      |> TempUser.changeset(params["temp_user"])
+  def handle_info("invite_received", socket) do
+    user_struct = Users.get_temp_user!(socket.assigns.current_user[:id])
+    received_invites_users = Users.get_temp_user_received_invites(user_struct)
+    received_temp_invites_users = Users.get_temp_user_received_temp_invites(user_struct)
 
-    # IO.inspect(changeset)
-
-    {:noreply,
-     socket
-     |> assign(:user_changeset, changeset)}
+    {
+      :noreply,
+      socket
+      |> assign(:user_received_invites, received_invites_users)
+      |> assign(:user_received_temp_invites, received_temp_invites_users)
+    }
   end
 
   @impl true
-  def handle_event("set_username", params, socket) do
-    case Users.register_temporary_user(params["temp_user"]) do
-      {:ok, user} ->
-        sent_invites_users = Users.get_user_sent_invites(user)
-        received_invites_users = Users.get_user_received_invites(user)
+  def handle_info({"invite_accepted", inviteeid}, socket) do
+    user_struct = Users.get_temp_user!(socket.assigns.current_user[:id])
+    sent_invites_users = Users.get_temp_user_sent_invites(user_struct)
+    sent_temp_invites_users = Users.get_temp_user_sent_temp_invites(user_struct)
 
-        if connected?(socket) do
-          {:ok, _} =
-            Presence.track(self(), @online_user_presence, user.id, %{
-              username: user.username,
-              location: user.location,
-              joined_at: :os.system_time(:seconds)
-            })
+    accepted_invites = Users.get_temp_user_accepted_invites(user_struct)
+    # rannections = Rannections.get_rannections_users(user_struct.rannections, user_struct.id)
+    invitee = Users.get_temp_user!(String.to_integer(inviteeid))
+    invitee_map = Map.from_struct(invitee) |> Map.put(:chatting, false) |> Map.put(:type, :temp)
 
-          Phoenix.PubSub.subscribe(PubSub, invitation_presence(user.id))
-          Phoenix.PubSub.subscribe(PubSub, chat_presence(user.id))
-        end
+    # IO.puts("invitee_map")
+    # IO.inspect(accepted_invites)
 
-        # IO.inspect(Map.from_struct(user))
-
-        {
-          :noreply,
-          socket
-          |> assign(:current_user, Map.from_struct(user))
-          |> assign(:user_sent_invites, sent_invites_users)
-          |> assign(:user_received_invites, received_invites_users)
-        }
-
-      {:error, changeset} ->
-        {
-          :noreply,
-          socket
-          |> assign(:user_changeset, changeset)
-        }
-    end
+    {
+      :noreply,
+      socket
+      |> assign(:user_sent_invites, sent_invites_users)
+      |> assign(:user_sent_temp_invites, sent_temp_invites_users)
+      # |> assign(:rannections, rannections)
+      |> assign(
+        :users,
+        Map.replace!(socket.assigns.users, inviteeid, invitee_map)
+      )
+      |> assign(:accepted_invites, accepted_invites)
+    }
   end
 
   @impl true
-  def handle_event("update_user_location", _params, socket) do
-    # IO.inspect(params)
-    # IO.inspect(socket.assigns.users)
-    user = Users.get_temp_user!(Integer.to_string(socket.assigns.current_user.id))
+  def handle_info("invite_rejected", socket) do
+    user_struct = Users.get_temp_user!(socket.assigns.current_user[:id])
+    sent_invites_users = Users.get_temp_user_sent_invites(user_struct)
+    sent_temp_invites_users = Users.get_temp_user_sent_temp_invites(user_struct)
 
-    Presence.update(self(), @online_user_presence, user.id, %{
-      username: user.username,
-      location: user.location,
-      joined_at: :os.system_time(:seconds)
-    })
-
-    {:noreply,
-     socket
-     |> assign(
-       :users,
-       Map.put(
-         socket.assigns.users,
-         Integer.to_string(user.id),
-         Map.from_struct(user)
-       )
-     )}
+    {
+      :noreply,
+      socket
+      |> assign(:user_sent_invites, sent_invites_users)
+      |> assign(:user_sent_temp_invites, sent_temp_invites_users)
+    }
   end
-
-  # @impl true
-  # def handle_info("invite_received", socket) do
-  #   user_struct = Users.get_user!(socket.assigns.current_user[:id])
-  #   received_invites_users = Users.get_user_received_invites(user_struct)
-
-  #   {
-  #     :noreply,
-  #     socket
-  #     |> assign(:user_received_invites, received_invites_users)
-  #   }
-  # end
-
-  # @impl true
-  # def handle_info({"invite_accepted", inviteeid}, socket) do
-  #   user_struct = Users.get_user!(socket.assigns.current_user[:id])
-  #   sent_invites_users = Users.get_user_sent_invites(user_struct)
-  #   rannections = Rannections.get_rannections_users(user_struct.rannections, user_struct.id)
-  #   invitee = Users.get_user!(inviteeid)
-  #   invitee_map = Map.from_struct(invitee) |> Map.put(:chatting, false)
-
-  #   {
-  #     :noreply,
-  #     socket
-  #     |> assign(:user_sent_invites, sent_invites_users)
-  #     |> assign(:rannections, rannections)
-  #     |> assign(:users, Map.delete(socket.assigns.users, inviteeid))
-  #     |> assign(
-  #       :online_rannections,
-  #       Map.put(socket.assigns.online_rannections, inviteeid, invitee_map)
-  #     )
-  #   }
-  # end
-
-  # @impl true
-  # def handle_info("invite_rejected", socket) do
-  #   user_struct = Users.get_user!(socket.assigns.current_user[:id])
-  #   sent_invites_users = Users.get_user_sent_invites(user_struct)
-
-  #   {
-  #     :noreply,
-  #     socket
-  #     |> assign(:user_sent_invites, sent_invites_users)
-  #   }
-  # end
 
   # @impl true
   # def handle_info({"chat_start", userid}, socket) do
@@ -258,129 +203,264 @@ defmodule RannectWeb.TempUsersLive do
   # end
 
   @impl true
-  def handle_event("invite", params, socket) do
-    # IO.puts(params["invitee"]<>" "<>params["inviter"])
-    user_struct = Users.get_temp_user!(socket.assigns.current_user[:id])
+  def handle_event("validate_username", params, socket) do
+    changeset =
+      %TempUser{}
+      |> TempUser.changeset(params["temp_user"])
 
-    case Users.invite_user(%{
-           :invitee => params["invitee"],
-           :inviter => params["inviter"]
-         }) do
-      {:ok, :ok} ->
-        Phoenix.PubSub.broadcast(
-          PubSub,
-          invitation_presence(params["invitee"]),
-          "invite_received"
-        )
+    # IO.inspect(changeset)
 
-        sent_invites_users = Users.get_user_sent_invites(user_struct)
-        received_invites_users = Users.get_user_received_invites(user_struct)
+    {:noreply,
+     socket
+     |> assign(:user_changeset, changeset)}
+  end
+
+  @impl true
+  def handle_event("set_username", params, socket) do
+    IO.inspect(params)
+
+    case Users.register_temporary_user(params["temp_user"]) do
+      {:ok, user} ->
+        IO.puts("here?")
+        sent_invites_users = Users.get_temp_user_sent_invites(user)
+        sent_temp_invites_users = Users.get_temp_user_sent_temp_invites(user)
+        received_invites_users = Users.get_temp_user_received_invites(user)
+        received_temp_invites_users = Users.get_temp_user_received_temp_invites(user)
+
+        if connected?(socket) do
+          {:ok, _} =
+            Presence.track(self(), @online_user_presence, user.id, %{
+              username: user.username,
+              location: user.location,
+              joined_at: :os.system_time(:seconds)
+            })
+
+          Phoenix.PubSub.subscribe(PubSub, invitation_presence(user.id))
+          Phoenix.PubSub.subscribe(PubSub, chat_presence(user.id))
+        end
+
+        # IO.inspect(Map.from_struct(user))
 
         {
           :noreply,
           socket
+          |> assign(:current_user, Map.from_struct(user))
           |> assign(:user_sent_invites, sent_invites_users)
+          |> assign(:user_sent_temp_invites, sent_temp_invites_users)
           |> assign(:user_received_invites, received_invites_users)
+          |> assign(:user_received_temp_invites, received_temp_invites_users)
         }
 
-      {:error, :already_invited} ->
-        {:noreply,
-         socket |> put_flash("error", "You have already sent an invitation to this user")}
-
-      {:error, :already_invited_user} ->
-        {:noreply,
-         socket |> put_flash("error", "You already have a pending invitation of this user")}
+      {:error, changeset} ->
+        {
+          :noreply,
+          socket
+          |> assign(:user_changeset, changeset)
+        }
     end
   end
 
-  # @impl true
-  # def handle_event("accept_invite", params, socket) do
-  #   user = socket.assigns.current_user
+  @impl true
+  def handle_event("update_user_location", _params, socket) do
+    # IO.inspect(params)
+    # IO.inspect(socket.assigns.users)
+    user = Users.get_temp_user!(Integer.to_string(socket.assigns.current_user.id))
 
-  #   Users.accept_invite(params["inviteid"], user[:id])
-  #   user_struct = Users.get_user!(user[:id])
+    Presence.update(self(), @online_user_presence, user.id, %{
+      username: user.username,
+      location: user.location,
+      joined_at: :os.system_time(:seconds)
+    })
 
-  #   Phoenix.PubSub.broadcast(
-  #     PubSub,
-  #     invitation_presence(params["inviter"]),
-  #     {"invite_accepted", user[:id]}
-  #   )
+    {:noreply,
+     socket
+     |> assign(
+       :users,
+       Map.put(
+         socket.assigns.users,
+         Integer.to_string(user.id),
+         Map.from_struct(user)
+       )
+     )}
+  end
 
-  #   inviter = Users.get_user!(params["inviter"])
-  #   inviter_map = Map.from_struct(inviter) |> Map.put(:chatting, false)
+  @impl true
+  def handle_event("invite", params, socket) do
+    # IO.puts(params["invitee"]<>" "<>params["inviter"])
+    user_struct = Users.get_temp_user!(socket.assigns.current_user[:id])
 
-  #   received_invites_users = Users.get_user_received_invites(user_struct)
-  #   rannections = Rannections.get_rannections_users(user_struct.rannections, user[:id])
+    case params["type"] do
+      "temp" ->
+        case Users.temp_invite_temp_user(%{
+               :temp_invitee => params["invitee"],
+               :temp_inviter => params["inviter"]
+             }) do
+          {:ok, :ok} ->
+            Phoenix.PubSub.broadcast(
+              PubSub,
+              invitation_presence(params["invitee"]),
+              "invite_received"
+            )
 
-  #   {
-  #     :noreply,
-  #     socket
-  #     |> assign(:user_received_invites, received_invites_users)
-  #     |> assign(:rannections, rannections)
-  #     |> assign(:users, Map.delete(socket.assigns.users, params["inviter"]))
-  #     |> assign(
-  #       :online_rannections,
-  #       Map.put(socket.assigns.online_rannections, params["inviter"], inviter_map)
-  #     )
-  #   }
-  # end
+            sent_invites_users = Users.get_temp_user_sent_invites(user_struct)
+            sent_temp_invites_users = Users.get_temp_user_sent_temp_invites(user_struct)
+            received_invites_users = Users.get_temp_user_received_invites(user_struct)
+            received_temp_invites_users = Users.get_temp_user_received_temp_invites(user_struct)
 
-  # @impl true
-  # def handle_event("reject_invite", params, socket) do
-  #   user = socket.assigns.current_user
-  #   user_struct = Users.get_user!(user[:id])
+            IO.inspect(received_invites_users)
+            IO.inspect(received_temp_invites_users)
 
-  #   Users.reject_invite(params["inviteid"], user[:id])
+            {
+              :noreply,
+              socket
+              |> assign(:user_sent_invites, sent_invites_users)
+              |> assign(:user_sent_temp_invites, sent_temp_invites_users)
+              |> assign(:user_received_invites, received_invites_users)
+              |> assign(:user_received_temp_invites, received_temp_invites_users)
+            }
 
-  #   Phoenix.PubSub.broadcast(
-  #     PubSub,
-  #     invitation_presence(params["inviter"]),
-  #     "invite_rejected"
-  #   )
+          {:error, :already_invited} ->
+            {:noreply,
+             socket |> put_flash("error", "You have already sent an invitation to this user")}
 
-  #   received_invites_users = Users.get_user_received_invites(user_struct)
+          {:error, :already_invited_user} ->
+            {:noreply,
+             socket |> put_flash("error", "You already have a pending invitation of this user")}
+        end
 
-  #   {
-  #     :noreply,
-  #     socket
-  #     |> assign(:user_received_invites, received_invites_users)
-  #   }
-  # end
+      "user" ->
+        case Users.temp_invite_user(%{
+               :invitee => params["invitee"],
+               :temp_inviter => params["inviter"]
+             }) do
+          {:ok, :ok} ->
+            Phoenix.PubSub.broadcast(
+              PubSub,
+              invitation_presence(params["invitee"]),
+              "invite_received"
+            )
 
-  # @impl true
-  # def handle_event("chat", params, socket) do
-  #   rannection =
-  #     Rannections.get_rannection_from_ids!(params["userid"], socket.assigns.current_user[:id])
+            sent_invites_users = Users.get_temp_user_sent_invites(user_struct)
+            sent_temp_invites_users = Users.get_temp_user_sent_temp_invites(user_struct)
+            received_invites_users = Users.get_temp_user_received_invites(user_struct)
+            received_temp_invites_users = Users.get_temp_user_received_temp_invites(user_struct)
 
-  #   rannection = Rannections.preload_rannection_chats(rannection)
+            {
+              :noreply,
+              socket
+              |> assign(:user_sent_invites, sent_invites_users)
+              |> assign(:user_sent_temp_invites, sent_temp_invites_users)
+              |> assign(:user_received_invites, received_invites_users)
+              |> assign(:user_received_temp_invites, received_temp_invites_users)
+            }
 
-  #   Phoenix.PubSub.broadcast(
-  #     PubSub,
-  #     chat_presence(params["userid"]),
-  #     {"chat_start", socket.assigns.current_user[:id]}
-  #   )
+          {:error, :already_invited} ->
+            {:noreply,
+             socket |> put_flash("error", "You have already sent an invitation to this user")}
 
-  #   {
-  #     :noreply,
-  #     socket
-  #     |> assign(
-  #       :online_rannections,
-  #       socket.assigns.online_rannections
-  #       |> Map.put(
-  #         params["userid"],
-  #         Map.put(socket.assigns.online_rannections[params["userid"]], :chatting, true)
-  #       )
-  #     )
-  #     |> assign(
-  #       :rannection_chats,
-  #       socket.assigns.rannection_chats
-  #       |> Map.put(
-  #         String.to_integer(params["userid"]),
-  #         rannection.chats
-  #       )
-  #     )
-  #   }
-  # end
+          {:error, :already_invited_user} ->
+            {:noreply,
+             socket |> put_flash("error", "You already have a pending invitation of this user")}
+        end
+    end
+  end
+
+  @impl true
+  def handle_event("accept_invite", params, socket) do
+    user = socket.assigns.current_user
+    Users.accept_temp_invite(params["inviteid"], user[:id])
+    user_struct = Users.get_temp_user!(user[:id])
+
+    Phoenix.PubSub.broadcast(
+      PubSub,
+      invitation_presence(params["inviter"]),
+      {"invite_accepted", Integer.to_string(user[:id])}
+    )
+
+    inviter = Users.get_temp_user!(params["inviter"])
+    inviter_map = Map.from_struct(inviter) |> Map.put(:chatting, false) |> Map.put(:type, :temp)
+
+    received_invites_users = Users.get_temp_user_received_invites(user_struct)
+    received_temp_invites_users = Users.get_temp_user_received_temp_invites(user_struct)
+
+    accepted_invites = Users.get_temp_user_accepted_invites(user_struct)
+    # rannections = Rannections.get_rannections_users(user_struct.rannections, user[:id])
+
+    # IO.puts("accepted_invites")
+    # IO.inspect(accepted_invites)
+
+    {
+      :noreply,
+      socket
+      |> assign(:user_received_invites, received_invites_users)
+      |> assign(:user_received_temp_invites, received_temp_invites_users)
+      # |> assign(:rannections, rannections)
+      |> assign(
+        :users,
+        Map.replace!(socket.assigns.users, params["inviter"], inviter_map)
+      )
+      |> assign(:accepted_invites, accepted_invites)
+    }
+  end
+
+  @impl true
+  def handle_event("reject_invite", params, socket) do
+    user = socket.assigns.current_user
+    user_struct = Users.get_temp_user!(user[:id])
+
+    Users.reject_temp_invite(params["inviteid"], user[:id])
+
+    Phoenix.PubSub.broadcast(
+      PubSub,
+      invitation_presence(params["inviter"]),
+      "invite_rejected"
+    )
+
+    received_invites_users = Users.get_temp_user_received_invites(user_struct)
+    received_temp_invites_users = Users.get_temp_user_received_temp_invites(user_struct)
+
+    {
+      :noreply,
+      socket
+      |> assign(:user_received_invites, received_invites_users)
+      |> assign(:user_received_temp_invites, received_temp_invites_users)
+    }
+  end
+
+  @impl true
+  def handle_event("chat", params, socket) do
+    rannection =
+      Rannections.get_rannection_from_ids!(params["userid"], socket.assigns.current_user[:id])
+
+    rannection = Rannections.preload_rannection_chats(rannection)
+
+    Phoenix.PubSub.broadcast(
+      PubSub,
+      chat_presence(params["userid"]),
+      {"chat_start", socket.assigns.current_user[:id]}
+    )
+
+    {
+      :noreply,
+      socket
+      |> assign(
+        :users,
+        socket.assigns.users
+        |> Map.put(
+          params["userid"],
+          Map.put(socket.assigns.users[params["userid"]], :chatting, true)
+        )
+      )
+      |> assign(
+        :rannection_chats,
+        socket.assigns.rannection_chats
+        |> Map.put(
+          String.to_integer(params["userid"]),
+          rannection.chats
+        )
+      )
+    }
+  end
 
   # @impl true
   # def handle_event("close_chat", params, socket) do

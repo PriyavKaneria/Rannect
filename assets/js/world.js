@@ -95,6 +95,7 @@ export function init(ref) {
 	globe.addEventListener("mousedown", onMouseDown)
 	globe.addEventListener("mousemove", onMouseMove)
 	globe.addEventListener("mouseup", onMouseUp)
+	globe.addEventListener("mouseleave", onMouseUp)
 	globe.addEventListener("touchstart", touchPass(onMouseDown))
 	globe.addEventListener("touchmove", touchPass(onMouseMove))
 	globe.addEventListener("touchend", touchPass(onMouseUp))
@@ -183,7 +184,7 @@ export function loadMarkers() {
 						globeDoms[x + segX * y],
 						marker.attributes.userid.nodeValue
 					)
-					console.log(globeDoms[x + segX * y])
+					// console.log(globeDoms[x + segX * y])
 					globeDoms[x + segX * y].appendChild(marker)
 					marker.style.position = "absolute"
 					marker.style.left = (markerData.dphi / segWidth) * 100 + "%"
