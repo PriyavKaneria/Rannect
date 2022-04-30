@@ -7,6 +7,7 @@ defmodule Rannect.Users do
   alias Rannect.Repo
 
   alias Rannect.Users.{User, UserToken, UserNotifier, Invite, TempUser, TempInvite}
+  alias Rannect.Rannections.{TempChat}
   # alias Rannect.Rannections
 
   ## Database getters
@@ -648,34 +649,42 @@ defmodule Rannect.Users do
     accepted_sent_invites_users =
       for invite <- all_sent_invites_of_user, Invite.is_invitation_accepted?(invite) do
         invite = Map.from_struct(invite)
-        Integer.to_string(invite.invitee)
+        {Integer.to_string(invite.invitee), Integer.to_string(invite.id)}
       end
+      |> Enum.into(%{})
 
     accepted_sent_temp_invites_users =
       for invite <- all_sent_temp_invites_of_user, TempInvite.is_invitation_accepted?(invite) do
         invite = Map.from_struct(invite)
-        Integer.to_string(invite.temp_invitee)
+        {Integer.to_string(invite.temp_invitee), Integer.to_string(invite.id)}
       end
+      |> Enum.into(%{})
 
     accepted_received_invites_users =
       for invite <- all_received_invites_of_user, Invite.is_invitation_accepted?(invite) do
         invite = Map.from_struct(invite)
-        Integer.to_string(invite.inviter)
+        {Integer.to_string(invite.inviter), Integer.to_string(invite.id)}
       end
+      |> Enum.into(%{})
 
     accepted_received_temp_invites_users =
       for invite <- all_received_temp_invites_of_user,
           TempInvite.is_invitation_accepted?(invite) do
         invite = Map.from_struct(invite)
-        Integer.to_string(invite.temp_inviter)
+        {Integer.to_string(invite.temp_inviter), Integer.to_string(invite.id)}
       end
+      |> Enum.into(%{})
 
     # IO.inspect(accepted_invites_users)
     # IO.inspect(accepted_temp_invites_users)
 
-    accepted_sent_invites_users ++
-      accepted_sent_temp_invites_users ++
-      accepted_received_invites_users ++ accepted_received_temp_invites_users
+    Map.merge(
+      accepted_sent_invites_users,
+      Map.merge(
+        accepted_sent_temp_invites_users,
+        Map.merge(accepted_received_invites_users, accepted_received_temp_invites_users)
+      )
+    )
   end
 
   defp check_temp_invites(inviter_id, invitee_id) do
@@ -1096,5 +1105,117 @@ defmodule Rannect.Users do
     user
     |> Ecto.Changeset.change(rannections: nrannections)
     |> Repo.update()
+  end
+
+  @doc """
+  Preloads chats for a invite.
+  
+  ## Examples
+  
+      iex> preload_invite_temp_chats(invite)
+      {:ok, %Invite{}}
+  
+      iex> preload_invite_temp_chats(invite)
+      {:error, %Ecto.Changeset{}}
+  """
+  def preload_invite_temp_chats(%TempInvite{} = invite) do
+    invite
+    |> Repo.preload(:temp_chats)
+  end
+
+  @doc """
+  Returns the list of chats of invite.
+  
+  ## Examples
+  
+      iex> list_temp_chats(1)
+      [%Chat{}, ...]
+  
+  """
+  def list_temp_chats(inviteid) do
+    query = from chat in TempChat, where: chat.temp_invite_id == ^inviteid
+    Repo.all(query)
+  end
+
+  @doc """
+  Gets a single chat.
+  
+  Raises `Ecto.NoResultsError` if the Chat does not exist.
+  
+  ## Examples
+  
+      iex> get_temp_chat!(123)
+      %Chat{}
+  
+      iex> get_temp_chat!(456)
+      ** (Ecto.NoResultsError)
+  
+  """
+  def get_temp_chat!(id), do: Repo.get!(TempChat, id)
+
+  @doc """
+  Creates a temp chat.
+  
+  ## Examples
+  
+      iex> create_temp_chat(%{field: value})
+      {:ok, %Chat{}}
+  
+      iex> create_temp_chat(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+  
+  """
+  def create_temp_chat(invite, attrs \\ %{}) do
+    invite
+    |> Ecto.build_assoc(:temp_chats)
+    |> TempChat.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a chat.
+  
+  ## Examples
+  
+      iex> update_chat(chat, %{field: new_value})
+      {:ok, %Chat{}}
+  
+      iex> update_chat(chat, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+  
+  """
+  def update_chat(%TempChat{} = tempchat, attrs) do
+    tempchat
+    |> TempChat.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a temp chat.
+  
+  ## Examples
+  
+      iex> delete_temp_chat(tempchat)
+      {:ok, %Chat{}}
+  
+      iex> delete_temp_chat(tempchat)
+      {:error, %Ecto.Changeset{}}
+  
+  """
+  def delete_temp_chat(%TempChat{} = tempchat) do
+    Repo.delete(tempchat)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking chat changes.
+  
+  ## Examples
+  
+      iex> change_temp_chat(tempchat)
+      %Ecto.Changeset{data: %Chat{}}
+  
+  """
+  def change_temp_chat(%TempChat{} = tempchat, attrs \\ %{}) do
+    TempChat.changeset(tempchat, attrs)
   end
 end

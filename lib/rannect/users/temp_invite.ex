@@ -5,6 +5,7 @@ defmodule Rannect.Users.TempInvite do
   alias Rannect.Users.User
   alias Rannect.Users.TempUser
   alias Rannect.Rannections.TempChat
+  # alias Rannect.Users.TempInvite
 
   schema "temp_invites" do
     field :accepted, :boolean, default: false

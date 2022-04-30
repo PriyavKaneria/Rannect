@@ -9,7 +9,7 @@ defmodule Rannect.Rannections.TempChat do
     field :img_url, :string
     field :sender, :id
     field :temp_sender, :id
-    belongs_to :temp_invites, TempInvite
+    belongs_to :temp_invites, TempInvite, foreign_key: :temp_invite_id
 
     timestamps()
   end
@@ -17,7 +17,7 @@ defmodule Rannect.Rannections.TempChat do
   @doc false
   def changeset(chat, attrs) do
     chat
-    |> cast(attrs, [:message, :img_url, :sender])
+    |> cast(attrs, [:message, :img_url, :sender, :temp_sender])
     |> validate_required([:message])
   end
 end

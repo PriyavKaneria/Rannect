@@ -2,7 +2,7 @@ defmodule RannectWeb.TempUsersLive do
   use RannectWeb, :live_view
   alias Rannect.Users.TempUser
   alias Rannect.Users
-  # alias Rannect.Rannections.TempChat
+  alias Rannect.Rannections.TempChat
 
   alias Rannect.PubSub
   alias Rannect.Presence
@@ -35,11 +35,11 @@ defmodule RannectWeb.TempUsersLive do
       |> assign(:user_sent_temp_invites, [])
       |> assign(:user_received_invites, %{})
       |> assign(:user_received_temp_invites, %{})
-      |> assign(:accepted_invites, [])
+      |> assign(:accepted_invites, %{})
       # |> assign(:rannections, rannections)
       # |> assign(:online_rannections, %{})
-      # |> assign(:rannection_chats, %{})
-      # |> assign(:chat_changeset, TempChat.changeset(%Chat{}, %{}))
+      |> assign(:chats, %{})
+      |> assign(:chat_changeset, TempChat.changeset(%TempChat{}, %{}))
       |> handle_joins(Presence.list(@online_user_presence))
     }
   end
@@ -146,61 +146,59 @@ defmodule RannectWeb.TempUsersLive do
     }
   end
 
-  # @impl true
-  # def handle_info({"chat_start", userid}, socket) do
-  #   newMap =
-  #     socket.assigns.online_rannections
-  #     |> Map.put(
-  #       Integer.to_string(userid),
-  #       Map.put(socket.assigns.online_rannections[Integer.to_string(userid)], :chatting, true)
-  #     )
+  @impl true
+  def handle_info({"chat_start", userid, inviteid}, socket) do
+    invite = Users.get_temp_invite!(inviteid)
+    invite_with_chats = Users.preload_invite_temp_chats(invite)
 
-  #   rannection = Rannections.get_rannection_from_ids!(userid, socket.assigns.current_user[:id])
+    {
+      :noreply,
+      socket
+      |> assign(
+        :users,
+        socket.assigns.users
+        |> Map.put(
+          Integer.to_string(userid),
+          Map.put(socket.assigns.users[Integer.to_string(userid)], :chatting, true)
+        )
+      )
+      |> assign(
+        :chats,
+        socket.assigns.chats
+        |> Map.put(
+          userid,
+          invite_with_chats.temp_chats
+        )
+      )
+    }
+  end
 
-  #   rannection = Rannections.preload_rannection_chats(rannection)
+  @impl true
+  def handle_info({"chat_message", userid, inviteid}, socket) do
+    invite = Users.get_temp_invite!(inviteid)
+    invite_with_chats = Users.preload_invite_temp_chats(invite)
 
-  #   {
-  #     :noreply,
-  #     socket
-  #     |> assign(:online_rannections, newMap)
-  #     |> assign(
-  #       :rannection_chats,
-  #       socket.assigns.rannection_chats
-  #       |> Map.put(
-  #         userid,
-  #         rannection.chats
-  #       )
-  #     )
-  #   }
-  # end
-
-  # @impl true
-  # def handle_info({"chat_message", userid}, socket) do
-  #   newMap =
-  #     socket.assigns.online_rannections
-  #     |> Map.put(
-  #       Integer.to_string(userid),
-  #       Map.put(socket.assigns.online_rannections[Integer.to_string(userid)], :chatting, true)
-  #     )
-
-  #   rannection = Rannections.get_rannection_from_ids!(userid, socket.assigns.current_user[:id])
-
-  #   rannection = Rannections.preload_rannection_chats(rannection)
-
-  #   {
-  #     :noreply,
-  #     socket
-  #     |> assign(:online_rannections, newMap)
-  #     |> assign(
-  #       :rannection_chats,
-  #       socket.assigns.rannection_chats
-  #       |> Map.put(
-  #         userid,
-  #         rannection.chats
-  #       )
-  #     )
-  #   }
-  # end
+    {
+      :noreply,
+      socket
+      |> assign(
+        :users,
+        socket.assigns.users
+        |> Map.put(
+          Integer.to_string(userid),
+          Map.put(socket.assigns.users[Integer.to_string(userid)], :chatting, true)
+        )
+      )
+      |> assign(
+        :chats,
+        socket.assigns.chats
+        |> Map.put(
+          userid,
+          invite_with_chats.temp_chats
+        )
+      )
+    }
+  end
 
   @impl true
   def handle_event("validate_username", params, socket) do
@@ -244,7 +242,7 @@ defmodule RannectWeb.TempUsersLive do
         {
           :noreply,
           socket
-          |> assign(:current_user, Map.from_struct(user))
+          |> assign(:current_user, Map.from_struct(user |> Map.put(:type, :temp)))
           |> assign(:user_sent_invites, sent_invites_users)
           |> assign(:user_sent_temp_invites, sent_temp_invites_users)
           |> assign(:user_received_invites, received_invites_users)
@@ -429,15 +427,14 @@ defmodule RannectWeb.TempUsersLive do
 
   @impl true
   def handle_event("chat", params, socket) do
-    rannection =
-      Rannections.get_rannection_from_ids!(params["userid"], socket.assigns.current_user[:id])
+    invite = Users.get_temp_invite!(params["inviteid"])
 
-    rannection = Rannections.preload_rannection_chats(rannection)
+    invite_with_chats = Users.preload_invite_temp_chats(invite)
 
     Phoenix.PubSub.broadcast(
       PubSub,
       chat_presence(params["userid"]),
-      {"chat_start", socket.assigns.current_user[:id]}
+      {"chat_start", socket.assigns.current_user[:id], params["inviteid"]}
     )
 
     {
@@ -452,77 +449,73 @@ defmodule RannectWeb.TempUsersLive do
         )
       )
       |> assign(
-        :rannection_chats,
-        socket.assigns.rannection_chats
+        :chats,
+        socket.assigns.chats
         |> Map.put(
           String.to_integer(params["userid"]),
-          rannection.chats
+          invite_with_chats.temp_chats
         )
       )
     }
   end
 
-  # @impl true
-  # def handle_event("close_chat", params, socket) do
-  #   newMap =
-  #     socket.assigns.online_rannections
-  #     |> Map.put(
-  #       params["userid"],
-  #       Map.put(socket.assigns.online_rannections[params["userid"]], :chatting, false)
-  #     )
+  @impl true
+  def handle_event("close_chat", params, socket) do
+    {
+      :noreply,
+      socket
+      |> assign(
+        :users,
+        socket.assigns.users
+        |> Map.put(
+          params["userid"],
+          Map.put(socket.assigns.users[params["userid"]], :chatting, false)
+        )
+      )
+    }
+  end
 
-  #   {
-  #     :noreply,
-  #     socket
-  #     |> assign(:online_rannections, newMap)
-  #   }
-  # end
+  @impl true
+  def handle_event("validate_message", params, socket) do
+    changeset =
+      %TempChat{}
+      |> TempChat.changeset(params["temp_chat"])
 
-  # @impl true
-  # def handle_event("validate_message", params, socket) do
-  #   changeset =
-  #     %Chat{}
-  #     |> Chat.changeset(params["chat"])
+    {:noreply,
+     socket
+     |> assign(:chat_changeset, changeset)}
+  end
 
-  #   {:noreply,
-  #    socket
-  #    |> assign(:chat_changeset, changeset)}
-  # end
+  @impl true
+  def handle_event("send_message", params, socket) do
+    invite = Users.get_temp_invite!(params["temp_chat"]["inviteid"])
 
-  # @impl true
-  # def handle_event("send_message", params, socket) do
-  #   rannection =
-  #     Rannections.get_rannection_from_ids!(
-  #       params["chat"]["userid"],
-  #       socket.assigns.current_user[:id]
-  #     )
+    invite
+    |> Users.create_temp_chat(%{
+      message: params["temp_chat"]["message"],
+      temp_sender: socket.assigns.current_user[:id]
+    })
 
-  #   rannection
-  #   |> Rannections.create_chat(%{
-  #     message: params["chat"]["message"],
-  #     sender: socket.assigns.current_user[:id]
-  #   })
+    Phoenix.PubSub.broadcast(
+      PubSub,
+      chat_presence(params["temp_chat"]["userid"]),
+      {"chat_message", socket.assigns.current_user[:id], params["temp_chat"]["inviteid"]}
+    )
 
-  #   Phoenix.PubSub.broadcast(
-  #     PubSub,
-  #     chat_presence(params["chat"]["userid"]),
-  #     {"chat_message", socket.assigns.current_user[:id]}
-  #   )
+    invite_with_chats = Users.preload_invite_temp_chats(invite)
 
-  #   rannection = Rannections.preload_rannection_chats(rannection)
-
-  #   {
-  #     :noreply,
-  #     socket
-  #     |> assign(
-  #       :rannection_chats,
-  #       socket.assigns.rannection_chats
-  #       |> Map.put(
-  #         String.to_integer(params["chat"]["userid"]),
-  #         rannection.chats
-  #       )
-  #     )
-  #     |> assign(:chat_changeset, Chat.changeset(%Chat{}, %{}))
-  #   }
-  # end
+    {
+      :noreply,
+      socket
+      |> assign(
+        :chats,
+        socket.assigns.chats
+        |> Map.put(
+          String.to_integer(params["temp_chat"]["userid"]),
+          invite_with_chats.temp_chats
+        )
+      )
+      |> assign(:chat_changeset, TempChat.changeset(%TempChat{}, %{}))
+    }
+  end
 end
