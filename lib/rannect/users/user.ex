@@ -3,7 +3,6 @@ defmodule Rannect.Users.User do
   import Ecto.Changeset
 
   alias Rannect.Users.Invite
-  alias Rannect.Users.TempInvite
   # alias Rannect.Rannections.Rannection
 
   schema "users" do
@@ -17,10 +16,10 @@ defmodule Rannect.Users.User do
     field :location, :map, default: %{}
     field :rannections, {:array, :integer}, default: []
 
-    has_many :sent_invites, Invite, foreign_key: :inviter
-    has_many :sent_temp_invites, TempInvite, foreign_key: :temp_inviter
-    has_many :received_invites, Invite, foreign_key: :invitee
-    has_many :received_temp_invites, TempInvite, foreign_key: :temp_invitee
+    has_many :sent_invites, Invite, foreign_key: :user_user_sender
+    has_many :received_invites, Invite, foreign_key: :user_user_receiver
+    has_many :sent_temp_invites, Invite, foreign_key: :user_temp_sender
+    has_many :received_temp_invites, Invite, foreign_key: :temp_user_receiver
 
     timestamps()
   end

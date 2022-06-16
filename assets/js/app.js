@@ -41,20 +41,30 @@ let csrfToken = document
 let Hooks = {}
 Hooks.SetLocation = {
 	DEBOUNCE_MS: 200,
+	user() {
+		return this.el.dataset.user
+	},
 	mounted() {
 		clearTimeout(this.timeout)
 		this.timeout = setTimeout(() => {
 			this.pushMyEvent = this.pushEvent
-			navigator.geolocation.getCurrentPosition((position) => {
+			this.cuser = this.user()
+			navigator.geolocation.getCurrentPosition(async (position) => {
 				this.pushEvent = this.pushMyEvent
+				this.myuser = this.cuser
 				console.log("set location")
-				fetch(
-					`/location?lat=${position.coords.latitude}&long=${position.coords.longitude}&temp=false`,
+				await fetch(
+					`/location?lat=${position.coords.latitude}&long=${position.coords.longitude}&temp=false&user=${this.myuser}`,
 					{ method: "get" }
-				).then((res) => {
-					console.log(res)
-					this.pushEvent("update_user_location", { location: res.json() })
-				})
+				)
+					.then((res) => {
+						return res.json()
+					})
+					.then((res) => {
+						// console.log(res)
+						this.pushEvent("update_user_location", { location: res })
+					})
+				setTimeout(() => goToUser(this.myuser), 1000)
 			})
 		}, this.DEBOUNCE_MS)
 	},

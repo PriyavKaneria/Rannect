@@ -76,7 +76,7 @@
                             <!-- Invitaion Accept/Reject for Users who recieved invitation -->
                             <div x-show="invitation || temp_invitation" class="flex space-x-2">
                                 <div class="flex-1 flex px-1 text-green-400-contrast hover:text-green-500-contrast bg-green-400 hover:bg-green-500 rounded-md"
-                                    phx-click="accept_invite" phx-value-inviteid={Map.get(@received,user_id) || Map.get(@temp_received,user_id)} phx-value-inviter={user_id}>
+                                    phx-click="accept_invite" phx-value-inviteid={Map.get(@received,user_id) || Map.get(@temp_received,user_id)} phx-value-inviter={user_id} phx-value-inviteetype={user.type}>
                                     <div class="relative px-1 flex-1 inline-flex items-center justify-center py-2 text-sm font-medium border border-transparent rounded-br-md">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -85,7 +85,7 @@
                                     </div>
                                 </div>
                                 <div class="flex-1 flex px-1 text-red-400-contrast hover:text-red-500-contrast bg-red-400 hover:bg-red-500 rounded-md"
-                                    phx-click="reject_invite" phx-value-inviteid={Map.get(@received,user_id) || Map.get(@temp_received,user_id)} phx-value-inviter={user_id}>
+                                    phx-click="reject_invite" phx-value-inviteid={Map.get(@received,user_id) || Map.get(@temp_received,user_id)} phx-value-inviter={user_id} phx-value-inviteetype={user.type}>
                                     <div class="relative px-1 flex-1 inline-flex items-center justify-center py-2 text-sm font-medium border border-transparent rounded-br-md">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />

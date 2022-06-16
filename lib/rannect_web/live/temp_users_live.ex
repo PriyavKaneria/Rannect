@@ -2,7 +2,7 @@ defmodule RannectWeb.TempUsersLive do
   use RannectWeb, :live_view
   alias Rannect.Users.TempUser
   alias Rannect.Users
-  alias Rannect.Rannections.TempChat
+  alias Rannect.Rannections.Chat
 
   alias Rannect.PubSub
   alias Rannect.Presence
@@ -39,7 +39,7 @@ defmodule RannectWeb.TempUsersLive do
       # |> assign(:rannections, rannections)
       # |> assign(:online_rannections, %{})
       |> assign(:chats, %{})
-      |> assign(:chat_changeset, TempChat.changeset(%TempChat{}, %{}))
+      |> assign(:chat_changeset, Chat.changeset(%Chat{}, %{}))
       |> handle_joins(Presence.list(@online_user_presence))
     }
   end
@@ -53,11 +53,14 @@ defmodule RannectWeb.TempUsersLive do
 
   defp handle_joins(socket, joins) do
     Enum.reduce(joins, socket, fn {user, %{metas: [meta | _]}}, socket ->
+      IO.inspect(user)
+      IO.inspect(meta)
+
       assign(
         socket,
         :users,
         socket.assigns.users
-        |> Map.put(user, meta |> Map.put(:type, :temp) |> Map.put(:chatting, false))
+        |> Map.put(user, meta |> Map.put(:chatting, false))
       )
     end)
   end
@@ -105,14 +108,26 @@ defmodule RannectWeb.TempUsersLive do
   end
 
   @impl true
-  def handle_info({"invite_accepted", inviteeid}, socket) do
+  def handle_info({"invite_accepted", invitertype, inviteeid}, socket) do
     user_struct = Users.get_temp_user!(socket.assigns.current_user[:id])
     sent_invites_users = Users.get_temp_user_sent_invites(user_struct)
     sent_temp_invites_users = Users.get_temp_user_sent_temp_invites(user_struct)
 
     accepted_invites = Users.get_temp_user_accepted_invites(user_struct)
     # rannections = Rannections.get_rannections_users(user_struct.rannections, user_struct.id)
-    invitee = Users.get_temp_user!(String.to_integer(inviteeid))
+
+    invitee =
+      case invitertype do
+        "user" ->
+          Users.get_user!(String.to_integer(inviteeid))
+
+        "temp" ->
+          Users.get_temp_user!(String.to_integer(inviteeid))
+
+        _ ->
+          raise "Invalid invite type"
+      end
+
     invitee_map = Map.from_struct(invitee) |> Map.put(:chatting, false) |> Map.put(:type, :temp)
 
     # IO.puts("invitee_map")
@@ -149,7 +164,7 @@ defmodule RannectWeb.TempUsersLive do
   @impl true
   def handle_info({"chat_start", userid, inviteid}, socket) do
     invite = Users.get_temp_invite!(inviteid)
-    invite_with_chats = Users.preload_invite_temp_chats(invite)
+    invite_with_chats = Users.preload_invite_chats(invite)
 
     {
       :noreply,
@@ -167,7 +182,7 @@ defmodule RannectWeb.TempUsersLive do
         socket.assigns.chats
         |> Map.put(
           userid,
-          invite_with_chats.temp_chats
+          invite_with_chats.chats
         )
       )
     }
@@ -176,7 +191,7 @@ defmodule RannectWeb.TempUsersLive do
   @impl true
   def handle_info({"chat_message", userid, inviteid}, socket) do
     invite = Users.get_temp_invite!(inviteid)
-    invite_with_chats = Users.preload_invite_temp_chats(invite)
+    invite_with_chats = Users.preload_invite_chats(invite)
 
     {
       :noreply,
@@ -194,7 +209,7 @@ defmodule RannectWeb.TempUsersLive do
         socket.assigns.chats
         |> Map.put(
           userid,
-          invite_with_chats.temp_chats
+          invite_with_chats.chats
         )
       )
     }
@@ -219,7 +234,6 @@ defmodule RannectWeb.TempUsersLive do
 
     case Users.register_temporary_user(params["temp_user"]) do
       {:ok, user} ->
-        IO.puts("here?")
         sent_invites_users = Users.get_temp_user_sent_invites(user)
         sent_temp_invites_users = Users.get_temp_user_sent_temp_invites(user)
         received_invites_users = Users.get_temp_user_received_invites(user)
@@ -230,6 +244,7 @@ defmodule RannectWeb.TempUsersLive do
             Presence.track(self(), @online_user_presence, user.id, %{
               username: user.username,
               location: user.location,
+              type: :temp,
               joined_at: :os.system_time(:seconds)
             })
 
@@ -267,7 +282,8 @@ defmodule RannectWeb.TempUsersLive do
     Presence.update(self(), @online_user_presence, user.id, %{
       username: user.username,
       location: user.location,
-      joined_at: :os.system_time(:seconds)
+      joined_at: :os.system_time(:seconds),
+      type: :temp
     })
 
     {:noreply,
@@ -277,7 +293,7 @@ defmodule RannectWeb.TempUsersLive do
        Map.put(
          socket.assigns.users,
          Integer.to_string(user.id),
-         Map.from_struct(user)
+         Map.from_struct(user |> Map.put(:type, :temp))
        )
      )}
   end
@@ -286,12 +302,13 @@ defmodule RannectWeb.TempUsersLive do
   def handle_event("invite", params, socket) do
     # IO.puts(params["invitee"]<>" "<>params["inviter"])
     user_struct = Users.get_temp_user!(socket.assigns.current_user[:id])
+    IO.inspect(socket.assigns.users)
 
     case params["type"] do
       "temp" ->
         case Users.temp_invite_temp_user(%{
-               :temp_invitee => params["invitee"],
-               :temp_inviter => params["inviter"]
+               :temp_temp_receiver => params["invitee"],
+               :temp_temp_sender => params["inviter"]
              }) do
           {:ok, :ok} ->
             Phoenix.PubSub.broadcast(
@@ -305,7 +322,7 @@ defmodule RannectWeb.TempUsersLive do
             received_invites_users = Users.get_temp_user_received_invites(user_struct)
             received_temp_invites_users = Users.get_temp_user_received_temp_invites(user_struct)
 
-            IO.inspect(received_invites_users)
+            # IO.inspect(received_invites_users)
             IO.inspect(received_temp_invites_users)
 
             {
@@ -328,8 +345,8 @@ defmodule RannectWeb.TempUsersLive do
 
       "user" ->
         case Users.temp_invite_user(%{
-               :invitee => params["invitee"],
-               :temp_inviter => params["inviter"]
+               :temp_user_receiver => params["invitee"],
+               :temp_user_sender => params["inviter"]
              }) do
           {:ok, :ok} ->
             Phoenix.PubSub.broadcast(
@@ -366,17 +383,42 @@ defmodule RannectWeb.TempUsersLive do
   @impl true
   def handle_event("accept_invite", params, socket) do
     user = socket.assigns.current_user
-    Users.accept_temp_invite(params["inviteid"], user[:id])
+
+    case params["inviteetype"] do
+      "user" ->
+        Users.accept_invite(params["inviteid"], :user_temp, user[:id])
+
+      "temp" ->
+        Users.accept_invite(params["inviteid"], :temp_temp, user[:id])
+
+      _ ->
+        raise "Invite Type invalid"
+    end
+
     user_struct = Users.get_temp_user!(user[:id])
 
     Phoenix.PubSub.broadcast(
       PubSub,
       invitation_presence(params["inviter"]),
-      {"invite_accepted", Integer.to_string(user[:id])}
+      {"invite_accepted", params["inviteetype"], params["inviter"]}
     )
 
-    inviter = Users.get_temp_user!(params["inviter"])
-    inviter_map = Map.from_struct(inviter) |> Map.put(:chatting, false) |> Map.put(:type, :temp)
+    inviter =
+      case params["inviteetype"] do
+        "user" ->
+          Users.get_user!(params["inviter"])
+
+        "temp" ->
+          Users.get_temp_user!(params["inviter"])
+
+        _ ->
+          raise "Invite Type invalid"
+      end
+
+    inviter_map =
+      Map.from_struct(inviter)
+      |> Map.put(:chatting, false)
+      |> Map.put(:type, String.to_atom(params["inviteetype"]))
 
     received_invites_users = Users.get_temp_user_received_invites(user_struct)
     received_temp_invites_users = Users.get_temp_user_received_temp_invites(user_struct)
@@ -406,7 +448,16 @@ defmodule RannectWeb.TempUsersLive do
     user = socket.assigns.current_user
     user_struct = Users.get_temp_user!(user[:id])
 
-    Users.reject_temp_invite(params["inviteid"], user[:id])
+    case params["inviteetype"] do
+      "user" ->
+        Users.reject_invite(params["inviteid"], :user_temp, user[:id])
+
+      "temp" ->
+        Users.reject_invite(params["inviteid"], :temp_temp, user[:id])
+
+      _ ->
+        raise "Invite Type invalid"
+    end
 
     Phoenix.PubSub.broadcast(
       PubSub,
@@ -429,7 +480,7 @@ defmodule RannectWeb.TempUsersLive do
   def handle_event("chat", params, socket) do
     invite = Users.get_temp_invite!(params["inviteid"])
 
-    invite_with_chats = Users.preload_invite_temp_chats(invite)
+    invite_with_chats = Users.preload_invite_chats(invite)
 
     Phoenix.PubSub.broadcast(
       PubSub,
@@ -453,7 +504,7 @@ defmodule RannectWeb.TempUsersLive do
         socket.assigns.chats
         |> Map.put(
           String.to_integer(params["userid"]),
-          invite_with_chats.temp_chats
+          invite_with_chats.chats
         )
       )
     }
@@ -478,8 +529,8 @@ defmodule RannectWeb.TempUsersLive do
   @impl true
   def handle_event("validate_message", params, socket) do
     changeset =
-      %TempChat{}
-      |> TempChat.changeset(params["temp_chat"])
+      %Chat{}
+      |> Chat.changeset(params["chat"])
 
     {:noreply,
      socket
@@ -488,21 +539,21 @@ defmodule RannectWeb.TempUsersLive do
 
   @impl true
   def handle_event("send_message", params, socket) do
-    invite = Users.get_temp_invite!(params["temp_chat"]["inviteid"])
+    invite = Users.get_temp_invite!(params["chat"]["inviteid"])
 
     invite
-    |> Users.create_temp_chat(%{
-      message: params["temp_chat"]["message"],
+    |> Users.create_chat(%{
+      message: params["chat"]["message"],
       temp_sender: socket.assigns.current_user[:id]
     })
 
     Phoenix.PubSub.broadcast(
       PubSub,
-      chat_presence(params["temp_chat"]["userid"]),
-      {"chat_message", socket.assigns.current_user[:id], params["temp_chat"]["inviteid"]}
+      chat_presence(params["chat"]["userid"]),
+      {"chat_message", socket.assigns.current_user[:id], params["chat"]["inviteid"]}
     )
 
-    invite_with_chats = Users.preload_invite_temp_chats(invite)
+    invite_with_chats = Users.preload_invite_chats(invite)
 
     {
       :noreply,
@@ -511,11 +562,11 @@ defmodule RannectWeb.TempUsersLive do
         :chats,
         socket.assigns.chats
         |> Map.put(
-          String.to_integer(params["temp_chat"]["userid"]),
-          invite_with_chats.temp_chats
+          String.to_integer(params["chat"]["userid"]),
+          invite_with_chats.chats
         )
       )
-      |> assign(:chat_changeset, TempChat.changeset(%TempChat{}, %{}))
+      |> assign(:chat_changeset, Chat.changeset(%Chat{}, %{}))
     }
   end
 end
