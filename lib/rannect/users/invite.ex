@@ -29,7 +29,7 @@ defmodule Rannect.Users.Invite do
     case type do
       :user_user ->
         invite
-        |> cast(attrs, [:user_user_sender, :user_user_reciever, :accepted])
+        |> cast(attrs, [:user_user_sender, :user_user_receiver, :accepted])
         |> foreign_key_constraint(:user_user_receiver)
         |> foreign_key_constraint(:user_user_sender)
         |> assoc_constraint(:user_user_receiver_id)

@@ -1143,7 +1143,26 @@ defmodule Rannect.Users do
   """
   def add_rannection(userid, rannectionid) do
     user = get_user!(userid)
-    nrannections = [rannectionid | user.rannections]
+    nrannections = [String.to_integer(rannectionid) | user.rannections]
+
+    user
+    |> Ecto.Changeset.change(rannections: nrannections)
+    |> Repo.update()
+  end
+
+  @spec remove_rannection(any, binary) :: any
+  @doc """
+  Removes Rannection.
+  
+  ## Examples
+  
+      iex> remove_rannection(user)
+      {:ok, %User{}}
+  
+  """
+  def remove_rannection(userid, rannectionid) do
+    user = get_user!(userid)
+    nrannections = List.delete(user.rannections, String.to_integer(rannectionid))
 
     user
     |> Ecto.Changeset.change(rannections: nrannections)

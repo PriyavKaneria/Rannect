@@ -19,6 +19,7 @@ defmodule RannectWeb.UsersLive do
 
     sent_invites_users = Users.get_user_sent_invites(user_struct)
     received_invites_users = Users.get_user_received_invites(user_struct)
+    accepted_invites = Users.get_user_accepted_invites(user_struct)
     # rannections = Rannections.get_rannections_users(user[:rannections], user[:id])
 
     if connected?(socket) do
@@ -46,7 +47,7 @@ defmodule RannectWeb.UsersLive do
       |> assign(:user_sent_temp_invites, [])
       |> assign(:user_received_invites, received_invites_users)
       |> assign(:user_received_temp_invites, %{})
-      |> assign(:accepted_invites, %{})
+      |> assign(:accepted_invites, accepted_invites)
       # |> assign(:rannections, rannections)
       # |> assign(:online_rannections, %{})
       |> assign(:chats, %{})
@@ -284,9 +285,9 @@ defmodule RannectWeb.UsersLive do
         end
 
       "user" ->
-        case Users.temp_invite_user(%{
-               :temp_user_receiver => params["invitee"],
-               :temp_user_sender => params["inviter"]
+        case Users.user_invite_user(%{
+               :user_user_receiver => params["invitee"],
+               :user_user_sender => params["inviter"]
              }) do
           {:ok, :ok} ->
             Phoenix.PubSub.broadcast(
@@ -503,5 +504,41 @@ defmodule RannectWeb.UsersLive do
       )
       |> assign(:chat_changeset, Chat.changeset(%Chat{}, %{}))
     }
+  end
+
+  @impl true
+  def handle_event("add_rannection", params, socket) do
+    case Users.add_rannection(socket.assigns.current_user[:id], params["userid"]) do
+      {:ok, user_struct} ->
+        {
+          :noreply,
+          socket
+          |> assign(
+            :current_user,
+            socket.assigns.current_user |> Map.put(:rannections, user_struct.rannections)
+          )
+        }
+
+      _ ->
+        raise "Add Rannection failed"
+    end
+  end
+
+  @impl true
+  def handle_event("remove_rannection", params, socket) do
+    case Users.remove_rannection(socket.assigns.current_user[:id], params["userid"]) do
+      {:ok, user_struct} ->
+        {
+          :noreply,
+          socket
+          |> assign(
+            :current_user,
+            socket.assigns.current_user |> Map.put(:rannections, user_struct.rannections)
+          )
+        }
+
+      _ ->
+        raise "Remove Rannection failed"
+    end
   end
 end
