@@ -53,8 +53,8 @@ defmodule RannectWeb.TempUsersLive do
 
   defp handle_joins(socket, joins) do
     Enum.reduce(joins, socket, fn {user, %{metas: [meta | _]}}, socket ->
-      IO.inspect(user)
-      IO.inspect(meta)
+      # IO.inspect(user)
+      # IO.inspect(meta)
 
       assign(
         socket,
@@ -230,7 +230,7 @@ defmodule RannectWeb.TempUsersLive do
 
   @impl true
   def handle_event("set_username", params, socket) do
-    IO.inspect(params)
+    # IO.inspect(params)
 
     case Users.register_temporary_user(params["temp_user"]) do
       {:ok, user} ->
@@ -302,7 +302,7 @@ defmodule RannectWeb.TempUsersLive do
   def handle_event("invite", params, socket) do
     # IO.puts(params["invitee"]<>" "<>params["inviter"])
     user_struct = Users.get_temp_user!(socket.assigns.current_user[:id])
-    IO.inspect(socket.assigns.users)
+    # IO.inspect(socket.assigns.users)
 
     case params["type"] do
       "temp" ->
@@ -323,7 +323,7 @@ defmodule RannectWeb.TempUsersLive do
             received_temp_invites_users = Users.get_temp_user_received_temp_invites(user_struct)
 
             # IO.inspect(received_invites_users)
-            IO.inspect(received_temp_invites_users)
+            # IO.inspect(received_temp_invites_users)
 
             {
               :noreply,

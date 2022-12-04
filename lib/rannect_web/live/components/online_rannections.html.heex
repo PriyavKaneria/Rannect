@@ -1,13 +1,26 @@
-
 <div class="flex rounded-lg shadow hover:shadow-xl flex-col bottom-12 left-12 z-30 absolute font-pt-sans">
     <div class="bg-slate-800 flex flex-row justify-start px-3 py-2 rounded-t-lg">
-        <span class="text-md text-white">Online Rannections</span>
+        <span class="text-md text-white">Rannections</span>
     </div>
     <div class="bg-white bg-opacity-90 px-3 py-2 flex flex-col space-y-2 rounded-b-lg max-h-52 overflow-auto" x-data>
-        <%= if Enum.count(@users)!=0 do %>
-            <%= for {userid,user} <- @users do %>
+        <%= if Enum.count(@rannections)!=0 do %>
+            <%= for {userid, user} <- @rannections do %>
                 <button class="text-normal text-black capitalize cursor-pointer" phx-hook="MarkerGoto" id={"marker-goto-" <> userid} x-on:click={"markerGoto.goto(" <> userid <>")"}>
-                    <%= user.username %> - <%= user.location["country"] %>
+                    <%= if Enum.member?(Map.keys(@users), userid) do %>
+                        <div class="flex justify-between space-x-3">
+                            <div>
+                                <%= user.username %> - <%= user.location["country"] %>
+                            </div>
+                            <div class="text-green-500 text-sm">🟢Online</div>
+                        </div>
+                    <% else %>
+                        <div class="flex justify-between space-x-3">
+                            <div>
+                                <%= user.username %> - <%= user.location["country"] %>
+                            </div>
+                            <div class="text-red-500 text-sm">🔴Offline</div>
+                        </div>
+                    <% end %>
                 </button>
             <% end %>
         <% else %>

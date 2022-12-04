@@ -2,13 +2,14 @@ var config = {
 	percent: 0,
 	lat: 0,
 	lng: 0,
-	segX: 14,
+	segX: 28,
 	segY: 12,
 	isHaloVisible: true,
 	isPoleVisible: true,
 	autoSpin: false,
 	zoom: 0,
 	maxZoom: 1,
+	markerThersholdZoom: 0.7,
 
 	skipPreloaderAnimation: false,
 
@@ -158,12 +159,14 @@ export function calcMarkers() {
 }
 
 function removeAllChildNodes(parent, userid) {
-	while (parent.firstChild) {
+	let children = parent.children
+	for (let i = 0; i < children.length; i++) {
+		const child = children[i]
 		if (
-			parent.firstChild.attributes.userid &&
-			parent.firstChild.attributes.userid.nodeValue == userid
+			child.attributes.userid &&
+			child.attributes.userid.nodeValue == userid
 		) {
-			parent.removeChild(parent.firstChild)
+			parent.removeChild(child)
 		}
 	}
 }
@@ -199,6 +202,8 @@ export function setAutoSpin(checked) {
 	config.autoSpin = checked
 }
 
+function getRegionOfMarker(marker, parent) {}
+
 function updateMarkerPositions() {
 	// console.log("updateMarkerPositions")
 	markers = document.getElementsByClassName("world-marker")
@@ -211,9 +216,12 @@ function updateMarkerPositions() {
 		)
 		if (!mrkr) continue
 		mrkrRect = marker.getBoundingClientRect()
+		// console.log(mrkrRect)
 		mrkr.style.left = mrkrRect.left + "px"
 		mrkr.style.top = mrkrRect.top + "px"
 	}
+	// console.log(config.zoom)
+	// debugger
 }
 
 function touchPass(func) {
@@ -378,6 +386,7 @@ function clampLng(lng) {
 function transformGlobe() {
 	var dom, perspectiveTransform
 	var x, y, v1, v2, v3, v4, vertex, verticesRow, i, len
+	// console.log("tick ", tick)
 	if ((tick ^= 1)) {
 		sinRY = Math.sin(rY)
 		sinRX = Math.sin(-rX)
@@ -432,17 +441,22 @@ function transformGlobe() {
 		for (i = 0, len = globeDoms.length; i < len; i++) {
 			perspectiveTransform = globeDoms[i].perspectiveTransform
 			if (!perspectiveTransform.hasError) {
+				// globeDoms[i].hidden = false
 				perspectiveTransform.update()
 			} else {
 				perspectiveTransform.style[transformStyleName] =
 					"translate3d(-8192px, 0, 0)"
+				// console.log(globeDoms[i])
+				// globeDoms[i].hidden = true
 			}
 		}
+		// debugger
 	}
 }
 
 export function goToUser(userid) {
 	var userMarker = document.querySelectorAll(`[userid="${userid}"]`)
+	if (!userMarker.length) return
 	let dataMarker = userMarker[0]
 	userMarker.forEach((m) => {
 		if (m.attributes.lat) {

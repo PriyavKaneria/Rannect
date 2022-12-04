@@ -99,14 +99,14 @@
                                 <%= if @current_user[:type] == :user do %>
                                     <%= if Enum.member?(Map.keys(@accepted), user_id) do %>
                                         <%= if @users[user_id][:type] == :user do %>
-                                            <%= if Enum.member?(@current_user.rannections, String.to_integer(user_id)) do %>
-                                                <div phx-click="remove_rannection" phx-value-userid={user_id} class="absolute top-0 right-0 cursor-pointer focus:scale-90 transform bg-blue-300 hover:bg-blue-400 w-12 h-12 translate-x-[40%] -translate-y-[25%] rounded-full flex justify-center items-center">
+                                            <%= if Enum.member?(Map.keys(@rannections), user_id) do %>
+                                                <div phx-click="remove_rannection" x-on:click="open = false" phx-value-userid={user_id} class="relative mr-0 ml-auto cursor-pointer focus:scale-90 transform bg-green-400 hover:bg-green-500 w-12 h-12 translate-x-[80%] -translate-y-[50%] rounded-full flex justify-center items-center">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                                     </svg>
                                                 </div>
                                             <% else %>
-                                                <div phx-click="add_rannection" phx-value-userid={user_id} class="absolute top-0 right-0 cursor-pointer focus:scale-90 transform bg-blue-500 hover:bg-blue-600 w-12 h-12 translate-x-[40%] -translate-y-[25%] rounded-full flex justify-center items-center">
+                                                <div phx-click="add_rannection" x-on:click="open = false" phx-value-userid={user_id} class="relative mr-0 ml-auto cursor-pointer focus:scale-90 transform bg-blue-500 hover:bg-blue-600 w-12 h-12 translate-x-[80%] -translate-y-[50%] rounded-full flex justify-center items-center">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                                                     </svg>
@@ -128,7 +128,7 @@
                                             </span>
                                         <% else %>
                                             <%= if @users[user_id][:type] == :user do %>
-                                                <%= if Enum.member?(@current_user.rannections, user_id) do %>
+                                                <%= if Enum.member?(Map.keys(@rannections), user_id) do %>
                                                     <span class="absolute bottom-0 right-0 -mb-2 -mr-2">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

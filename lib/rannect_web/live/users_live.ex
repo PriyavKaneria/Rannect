@@ -20,7 +20,9 @@ defmodule RannectWeb.UsersLive do
     sent_invites_users = Users.get_user_sent_invites(user_struct)
     received_invites_users = Users.get_user_received_invites(user_struct)
     accepted_invites = Users.get_user_accepted_invites(user_struct)
-    # rannections = Rannections.get_rannections_users(user[:rannections], user[:id])
+    rannections = Users.get_rannections_users(user.rannections)
+
+    # IO.inspect(rannections)
 
     if connected?(socket) do
       {:ok, _} =
@@ -48,7 +50,7 @@ defmodule RannectWeb.UsersLive do
       |> assign(:user_received_invites, received_invites_users)
       |> assign(:user_received_temp_invites, %{})
       |> assign(:accepted_invites, accepted_invites)
-      # |> assign(:rannections, rannections)
+      |> assign(:rannections, rannections)
       # |> assign(:online_rannections, %{})
       |> assign(:chats, %{})
       |> assign(:chat_changeset, Chat.changeset(%Chat{}, %{}))
@@ -58,8 +60,8 @@ defmodule RannectWeb.UsersLive do
 
   defp handle_joins(socket, joins) do
     Enum.reduce(joins, socket, fn {user, %{metas: [meta | _]}}, socket ->
-      IO.inspect(user)
-      IO.inspect(meta)
+      # IO.inspect(user)
+      # IO.inspect(meta)
       # Phoenix.PubSub.broadcast_from(
       #   PubSub,
       #   @online_user_presence,
@@ -264,7 +266,7 @@ defmodule RannectWeb.UsersLive do
             received_temp_invites_users = Users.get_user_received_temp_invites(user_struct)
 
             # IO.inspect(received_invites_users)
-            IO.inspect(received_temp_invites_users)
+            # IO.inspect(received_temp_invites_users)
 
             {
               :noreply,
@@ -509,13 +511,17 @@ defmodule RannectWeb.UsersLive do
   @impl true
   def handle_event("add_rannection", params, socket) do
     case Users.add_rannection(socket.assigns.current_user[:id], params["userid"]) do
-      {:ok, user_struct} ->
+      {:ok, _} ->
         {
           :noreply,
           socket
           |> assign(
-            :current_user,
-            socket.assigns.current_user |> Map.put(:rannections, user_struct.rannections)
+            :rannections,
+            socket.assigns.rannections
+            |> Map.put(
+              Integer.to_string(socket.assigns.current_user[:id]),
+              Users.get_user!(params["userid"])
+            )
           )
         }
 
@@ -527,13 +533,13 @@ defmodule RannectWeb.UsersLive do
   @impl true
   def handle_event("remove_rannection", params, socket) do
     case Users.remove_rannection(socket.assigns.current_user[:id], params["userid"]) do
-      {:ok, user_struct} ->
+      {:ok, _} ->
         {
           :noreply,
           socket
           |> assign(
-            :current_user,
-            socket.assigns.current_user |> Map.put(:rannections, user_struct.rannections)
+            :rannections,
+            socket.assigns.rannections |> Map.delete(params["userid"])
           )
         }
 

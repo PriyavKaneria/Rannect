@@ -61,7 +61,7 @@ defmodule RannectWeb.UserLocationController do
     # IO.puts("userState : " <> userState)
     # IO.puts("userCountryCode : " <> userCountryCode)
 
-    IO.inspect("temp is " <> temp)
+    # IO.inspect("temp is " <> temp)
 
     if temp == "true" do
       user = Users.get_temp_user!(String.to_integer(user_id))

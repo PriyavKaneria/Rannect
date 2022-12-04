@@ -495,8 +495,8 @@ defmodule Rannect.Users do
   """
   def get_user_sent_invites(user) do
     sent_invites = Repo.all(Ecto.assoc(user, :sent_invites))
-    IO.puts("SENT INVITES: ")
-    IO.inspect(sent_invites)
+    # IO.puts("SENT INVITES: ")
+    # IO.inspect(sent_invites)
 
     sent_invites_users =
       for invite <- sent_invites, !Invite.is_invitation_accepted?(invite) do
@@ -591,7 +591,7 @@ defmodule Rannect.Users do
   """
   def get_temp_user_sent_invites(user) do
     sent_temp_invites = Repo.all(Ecto.assoc(user, :sent_invites))
-    IO.inspect(sent_temp_invites)
+    # IO.inspect(sent_temp_invites)
 
     sent_temp_invites_users =
       for invite <- sent_temp_invites, !Invite.is_invitation_accepted?(invite) do
@@ -640,7 +640,7 @@ defmodule Rannect.Users do
   """
   def get_temp_user_sent_temp_invites(user) do
     sent_temp_invites = Repo.all(Ecto.assoc(user, :sent_temp_invites))
-    IO.inspect(sent_temp_invites)
+    # IO.inspect(sent_temp_invites)
 
     sent_temp_invites_users =
       for invite <- sent_temp_invites, !Invite.is_invitation_accepted?(invite) do
@@ -1130,6 +1130,21 @@ defmodule Rannect.Users do
       !Invite.is_user_invited?(invite, type, userid) -> {:error, :not_invited}
       true -> invite |> Repo.delete()
     end
+  end
+
+  @doc """
+  Get Rannection User Structs
+  
+  ## Examples
+  
+      iex> get_rannections_users(rannections)
+      [%User{}, %User{}, ...]
+  
+  """
+  def get_rannections_users(rannections) do
+    Map.new(rannections, fn rannection ->
+      {Integer.to_string(rannection), Map.from_struct(get_user!(rannection))}
+    end)
   end
 
   @doc """
