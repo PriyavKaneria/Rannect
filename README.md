@@ -1,5 +1,20 @@
 # Rannect
 
+A location-based online web chat app that helps people socialize and make connections with people all around the world
+
+## Demo
+
+[![Rannect Demo Video](https://img.youtube.com/vi/Z5s_yBsyTk0/0.jpg)](https://www.youtube.com/watch?v=Z5s_yBsyTk0 "Ranenct Demo Video")
+
+## Made using PETAL framework
+- P : Phoenix
+- E : Elixir
+- T : Tailwind
+- A : Alpine
+- L : Liveview
+
+## How to run locally
+
 To start your Phoenix server:
 
   * Install dependencies with `mix deps.get`
